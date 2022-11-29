@@ -1,4 +1,5 @@
 PROGS = [
+    'world',
     'account_option',
     'account_manager',
     'authorization_request',

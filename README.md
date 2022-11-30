@@ -2,6 +2,7 @@
 Fork of Pidgin repository with just libpurple
 
 To get complete test passes, you must do sudo vi /etc/update-manager/release-upgrades to change the prompt to normal.
+
 To build libpurple run the following commands
 ```
 do-release-upgrade

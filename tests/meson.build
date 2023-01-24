@@ -46,7 +46,7 @@ foreach prog : PROGS
                    c_args : [
                        '-DTEST_DATA_DIR="@0@/data"'.format(meson.current_source_dir())
                    ],
-                   dependencies : [libpurple_dep, glib],
+                   dependencies : [libpurple_dep, glib, gplugin_dep, gplugin_gtk_dep],
                    link_with: test_ui,
     )
     test(prog, e,

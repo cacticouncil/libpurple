@@ -11,13 +11,16 @@ struct _ExampleAppWindow
 G_DEFINE_TYPE(ExampleAppWindow, example_app_window, GTK_TYPE_APPLICATION_WINDOW);
 
 static void
-example_app_window_init (ExampleAppWindow *app)
+example_app_window_init (ExampleAppWindow *win)
 {
+  gtk_widget_init_template (GTK_WIDGET (win));
 }
 
 static void
 example_app_window_class_init (ExampleAppWindowClass *class)
 {
+  gtk_widget_class_set_template_from_resource (GTK_WIDGET_CLASS (class),
+                                               "/org/gtk/exampleapp/window.ui");
 }
 
 ExampleAppWindow *

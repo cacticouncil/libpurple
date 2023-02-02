@@ -1,5 +1,5 @@
 #include <gtk/gtk.h>
-
+#include "purple.h"
 #include "exampleapp.h"
 
 int

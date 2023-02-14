@@ -534,6 +534,7 @@ purple_coresources = [
 	'purpleconversationuiops.c',
 	'purplecredentialmanager.c',
 	'purplecredentialprovider.c',
+	'purplecoreuiops.c',
 	'purpledebugui.c',
 	'purplegdkpixbuf.c',
 	'purplegio.c',
@@ -585,6 +586,7 @@ purple_coresources = [
 	'util.c',
 	'version.c',
 	'xfer.c',
+	'upnp.c',
 	'xmlnode.c'
 ]
 
@@ -638,6 +640,7 @@ purple_coreheaders = [
 	'purpleconversationuiops.h',
 	'purplecredentialmanager.h',
 	'purplecredentialprovider.h',
+	'purplecoreuiops.h',
 	'purpledebugui.h',
 	'purplegdkpixbuf.h',
 	'purplegio.h',
@@ -690,6 +693,7 @@ purple_coreheaders = [
 	'stun.h',
 	'tests.h',
 	'util.h',
+	'upnp.h',
 	'xfer.h',
 	'xmlnode.h',
 ]

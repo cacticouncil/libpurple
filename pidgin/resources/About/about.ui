@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.38.2 
+
+Pidgin - Internet Messenger
+Copyright (C) Pidgin Developers <devel@pidgin.im>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+-->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="Talkatu" version="0.0"/>
+  <!-- interface-license-type gplv2 -->
+  <!-- interface-name Pidgin -->
+  <!-- interface-description Internet Messenger -->
+  <!-- interface-copyright Pidgin Developers <devel@pidgin.im> -->
+  <object class="GtkTreeStore" id="build_info_store">
+    <columns>
+      <!-- column-name title -->
+      <column type="gchararray"/>
+      <!-- column-name value -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkTreeStore" id="developers_store">
+    <columns>
+      <!-- column-name markup -->
+      <column type="gchararray"/>
+      <!-- column-name align -->
+      <column type="gfloat"/>
+    </columns>
+  </object>
+  <object class="TalkatuMarkdownBuffer" id="main_buffer"/>
+  <object class="GtkTreeStore" id="translators_store">
+    <columns>
+      <!-- column-name markup -->
+      <column type="gchararray"/>
+      <!-- column-name align -->
+      <column type="gfloat"/>
+    </columns>
+  </object>
+  <template class="PidginAboutDialog" parent="GtkDialog">
+    <property name="resizable">0</property>
+    <signal name="response" handler="pidgin_about_dialog_response_cb" swapped="no"/>
+    <child internal-child="content_area">
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child>
+          <object class="GtkBox">
+            <property name="vexpand">1</property>
+            <property name="orientation">vertical</property>
+            <property name="spacing">5</property>
+            <child>
+              <object class="GtkPicture" id="logo">
+                <property name="file">resource:///im/pidgin/Pidgin3/logo.png</property>
+                <property name="halign">center</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="application_name">
+                <property name="label" translatable="1">Pidgin</property>
+                <property name="justify">center</property>
+                <property name="selectable">1</property>
+                <attributes>
+                  <attribute name="weight" value="bold"></attribute>
+                </attributes>
+              </object>
+            </child>
+            <child>
+              <object class="GtkStack" id="stack">
+                <property name="vexpand">1</property>
+                <property name="width-request">400</property>
+                <property name="height-request">150</property>
+                <property name="margin-bottom">2</property>
+                <property name="transition-type">slide-up</property>
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">main</property>
+                    <property name="title" translatable="1">General</property>
+                    <property name="child">
+                      <object class="GtkScrolledWindow" id="main_scrolled_window">
+                        <property name="focusable">1</property>
+                        <property name="hscrollbar-policy">never</property>
+                        <child>
+                          <object class="TalkatuView" id="main_page">
+                            <property name="focusable">1</property>
+                            <property name="editable">0</property>
+                            <property name="margin-start">12</property>
+                            <property name="margin-end">12</property>
+                            <property name="wrap-mode">word</property>
+                            <property name="buffer">main_buffer</property>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">developers</property>
+                    <property name="title" translatable="1">Developers</property>
+                    <property name="child">
+                      <object class="GtkScrolledWindow" id="developers_page">
+                        <property name="focusable">1</property>
+                        <property name="hscrollbar-policy">never</property>
+                        <property name="child">
+                          <object class="GtkTreeView" id="developers_treeview">
+                            <property name="focusable">1</property>
+                            <property name="model">developers_store</property>
+                            <property name="headers-visible">0</property>
+                            <property name="show-expanders">0</property>
+                            <child internal-child="selection">
+                              <object class="GtkTreeSelection"/>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="developers_column">
+                                <property name="resizable">1</property>
+                                <property name="sizing">autosize</property>
+                                <child>
+                                  <object class="GtkCellRendererText" id="developers_cell_renderer"/>
+                                  <attributes>
+                                    <attribute name="xalign">1</attribute>
+                                    <attribute name="markup">0</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">translators</property>
+                    <property name="title" translatable="1">Translators</property>
+                    <property name="child">
+                      <object class="GtkScrolledWindow" id="translators_page">
+                        <property name="focusable">1</property>
+                        <property name="child">
+                          <object class="GtkTreeView" id="translators_treeview">
+                            <property name="focusable">1</property>
+                            <property name="model">translators_store</property>
+                            <property name="headers-visible">0</property>
+                            <property name="show-expanders">0</property>
+                            <child internal-child="selection">
+                              <object class="GtkTreeSelection"/>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="translators_column">
+                                <child>
+                                  <object class="GtkCellRendererText" id="translators_cell_renderer"/>
+                                  <attributes>
+                                    <attribute name="xalign">1</attribute>
+                                    <attribute name="markup">0</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">build-info</property>
+                    <property name="title" translatable="1">Build Information</property>
+                    <property name="child">
+                      <object class="GtkScrolledWindow" id="build_info_page">
+                        <property name="focusable">1</property>
+                        <property name="hscrollbar-policy">never</property>
+                        <property name="child">
+                          <object class="GtkTreeView" id="build_info_treeview">
+                            <property name="focusable">1</property>
+                            <property name="model">build_info_store</property>
+                            <property name="headers-visible">0</property>
+                            <property name="show-expanders">0</property>
+                            <child internal-child="selection">
+                              <object class="GtkTreeSelection"/>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn">
+                                <child>
+                                  <object class="GtkCellRendererText"/>
+                                  <attributes>
+                                    <attribute name="markup">0</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn">
+                                <child>
+                                  <object class="GtkCellRendererText"/>
+                                  <attributes>
+                                    <attribute name="markup">1</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="-7">close_button</action-widget>
+    </action-widgets>
+    <child internal-child="action_area">
+      <object class="GtkBox">
+        <property name="valign">center</property>
+        <child>
+          <object class="GtkStackSwitcher" id="switcher">
+            <property name="stack">stack</property>
+            <property name="hexpand">1</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton" id="close_button">
+            <property name="label" translatable="1">Close</property>
+            <property name="focusable">1</property>
+            <property name="receives-default">1</property>
+            <property name="hexpand">1</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

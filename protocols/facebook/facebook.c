@@ -116,7 +116,7 @@ fb_cb_api_connect(FbApi *api, gpointer data)
 	acct = purple_connection_get_account(gc);
 
 	fb_data_save(fata);
-	purple_connection_set_state(gc, PURPLE_CONNECTION_STATE_CONNECTED);
+	purple_connection_set_state(gc, PURPLE_CONNECTION_CONNECTED);
 
 	if (purple_account_get_bool(acct, "show-unread", TRUE)) {
 		fb_api_unread(api);
@@ -286,7 +286,7 @@ fb_cb_api_contacts(FbApi *api, GSList *users, gboolean complete, gpointer data)
 		return;
 	}
 
-	if (state != PURPLE_CONNECTION_STATE_CONNECTED) {
+	if (state != PURPLE_CONNECTION_CONNECTED) {
 		status = purple_account_get_active_status(acct);
 		type = purple_status_get_status_type(status);
 		pstat = purple_status_type_get_primitive(type);
@@ -1008,7 +1008,8 @@ fb_get_account_options(PurpleProtocol *protocol) {
 }
 
 static void
-fb_login(G_GNUC_UNUSED PurpleProtocol *protocol, PurpleAccount *acct) {
+fb_login(PurpleAccount *acct)
+{
 	const gchar *pass;
 	const gchar *user;
 	FbApi *api;
@@ -1112,7 +1113,8 @@ fb_login(G_GNUC_UNUSED PurpleProtocol *protocol, PurpleAccount *acct) {
 }
 
 static void
-fb_close(G_GNUC_UNUSED PurpleProtocol *protocol, PurpleConnection *gc) {
+fb_close(PurpleConnection *gc)
+{
 	FbApi *api;
 	FbData *fata;
 
@@ -1128,7 +1130,8 @@ fb_close(G_GNUC_UNUSED PurpleProtocol *protocol, PurpleConnection *gc) {
 }
 
 static GList *
-fb_status_types(G_GNUC_UNUSED PurpleProtocol *protocol, PurpleAccount *acct) {
+fb_status_types(PurpleAccount *acct)
+{
 	PurpleStatusType *type;
 	GList *types = NULL;
 

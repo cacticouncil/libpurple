@@ -1,4 +1,4 @@
-CREATE TABLE message_log
+CREATE TABLE IF NOT EXISTS message_log
 (
         protocol TEXT NOT NULL, -- examples: slack, xmpp, irc, discord
         account TEXT NOT NULL, -- example: grim@reaperworld.com@milwaukee.slack.com

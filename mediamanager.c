@@ -215,7 +215,7 @@ purple_media_manager_finalize (GObject *media)
 }
 
 PurpleMediaManager *
-purple_media_manager_get(void)
+purple_media_manager_get()
 {
 	static PurpleMediaManager *manager = NULL;
 
@@ -954,7 +954,7 @@ create_recv_appsink(PurpleMediaElementInfo *element_info, PurpleMedia *media,
 }
 
 static PurpleMediaElementInfo *
-get_send_application_element_info(void)
+get_send_application_element_info ()
 {
 	static PurpleMediaElementInfo *info = NULL;
 
@@ -972,7 +972,7 @@ get_send_application_element_info(void)
 }
 
 static PurpleMediaElementInfo *
-get_recv_application_element_info(void)
+get_recv_application_element_info ()
 {
 	static PurpleMediaElementInfo *info = NULL;
 
@@ -2139,7 +2139,7 @@ purple_media_manager_register_static_elements(PurpleMediaManager *manager)
  */
 
 GType
-purple_media_element_type_get_type(void)
+purple_media_element_type_get_type()
 {
 	static GType type = 0;
 	if (type == 0) {

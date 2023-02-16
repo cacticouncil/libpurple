@@ -24,7 +24,6 @@
 
 #include "debug.h"
 #include "purplebuddypresence.h"
-#include "purplecontactmanager.h"
 #include "purpleconversationmanager.h"
 #include "purpleprotocolclient.h"
 #include "util.h"
@@ -170,24 +169,11 @@ purple_buddy_constructed(GObject *object) {
 	G_OBJECT_CLASS(purple_buddy_parent_class)->constructed(object);
 
 	if(priv->id == NULL) {
-		/* If there is no id for the user, generate a SHA256 based on the
-		 * account_id and the username.
-		 */
-		GChecksum *sum = g_checksum_new(G_CHECKSUM_SHA256);
-		const guchar *data = NULL;
+		gchar *id = g_uuid_string_random();
 
-		data = (const guchar *)purple_account_get_protocol_id(priv->account);
-		g_checksum_update(sum, data, -1);
+		purple_buddy_set_id(buddy, id);
 
-		data = (const guchar *)purple_account_get_username(priv->account);
-		g_checksum_update(sum, data, -1);
-
-		data = (const guchar *)priv->name;
-		g_checksum_update(sum, data, -1);
-
-		purple_buddy_set_id(buddy, g_checksum_get_string(sum));
-
-		g_checksum_free(sum);
+		g_free(id);
 	}
 
 	priv->presence = PURPLE_PRESENCE(purple_buddy_presence_new(buddy));
@@ -260,7 +246,7 @@ static void purple_buddy_class_init(PurpleBuddyClass *klass) {
 		"name", "Name",
 		"The name of the buddy.",
 		NULL,
-		G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
+		G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
 	properties[PROP_LOCAL_ALIAS] = g_param_spec_string(
 		"local-alias", "Local alias",
@@ -306,25 +292,15 @@ static void purple_buddy_class_init(PurpleBuddyClass *klass) {
 PurpleBuddy *
 purple_buddy_new(PurpleAccount *account, const gchar *name, const gchar *alias)
 {
-	PurpleBuddy *buddy = NULL;
-	PurpleContactManager *manager = NULL;
-
 	g_return_val_if_fail(PURPLE_IS_ACCOUNT(account), NULL);
 	g_return_val_if_fail(name != NULL, NULL);
 
-	buddy = g_object_new(
+	return g_object_new(
 		PURPLE_TYPE_BUDDY,
 		"account", account,
 		"name", name,
 		"local-alias", alias,
 		NULL);
-
-	manager = purple_contact_manager_get_default();
-	G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-	purple_contact_manager_add_buddy(manager, buddy);
-	G_GNUC_END_IGNORE_DEPRECATIONS
-
-	return buddy;
 }
 
 const gchar *

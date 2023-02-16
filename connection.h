@@ -27,13 +27,9 @@
 #define PURPLE_CONNECTION_H
 
 #include <glib.h>
-#include <glib-object.h>
-
-G_BEGIN_DECLS
 
 #define PURPLE_TYPE_CONNECTION  purple_connection_get_type()
-G_DECLARE_DERIVABLE_TYPE(PurpleConnection, purple_connection, PURPLE,
-                         CONNECTION, GObject)
+typedef struct _PurpleConnection PurpleConnection;
 
 #define PURPLE_TYPE_CONNECTION_UI_OPS  (purple_connection_ui_ops_get_type())
 typedef struct _PurpleConnectionUiOps PurpleConnectionUiOps;
@@ -82,18 +78,15 @@ typedef enum /*< flags >*/
 
 /**
  * PurpleConnectionState:
- * @PURPLE_CONNECTION_STATE_DISCONNECTED: Disconnected
- * @PURPLE_CONNECTION_STATE_DISCONNECTING: Disconnecting
- * @PURPLE_CONNECTION_STATE_CONNECTED: Connected
- * @PURPLE_CONNECTION_STATE_CONNECTING: Connecting
- *
- * A representation of the state of a [class@Purple.Connection].
+ * @PURPLE_CONNECTION_DISCONNECTED: Disconnected.
+ * @PURPLE_CONNECTION_CONNECTED:    Connected.
+ * @PURPLE_CONNECTION_CONNECTING:   Connecting.
  */
-typedef enum {
-	PURPLE_CONNECTION_STATE_DISCONNECTED = 0,
-	PURPLE_CONNECTION_STATE_DISCONNECTING,
-	PURPLE_CONNECTION_STATE_CONNECTED,
-	PURPLE_CONNECTION_STATE_CONNECTING
+typedef enum
+{
+	PURPLE_CONNECTION_DISCONNECTED = 0,
+	PURPLE_CONNECTION_CONNECTED,
+	PURPLE_CONNECTION_CONNECTING
 } PurpleConnectionState;
 
 /**
@@ -112,17 +105,6 @@ typedef enum {
 #include "purpleconnectionerrorinfo.h"
 #include "purpleprotocol.h"
 #include "status.h"
-
-struct _PurpleConnectionClass {
-	/*< private >*/
-	GObjectClass parent;
-
-	gboolean (*connect)(PurpleConnection *connection, GError **error);
-	gboolean (*disconnect)(PurpleConnection *connection, GError **error);
-
-	/*< private >*/
-	gpointer reserved[8];
-};
 
 /**
  * PurpleConnectionUiOps:
@@ -173,6 +155,8 @@ struct _PurpleConnectionUiOps
 	void (*_purple_reserved4)(void);
 };
 
+G_BEGIN_DECLS
+
 /******************************************************************************
  * To be deleted in the future
  *****************************************************************************/
@@ -185,46 +169,11 @@ _purple_assert_connection_is_valid(PurpleConnection *gc,
 /**************************************************************************/
 
 /**
- * purple_connection_connect:
- * @connection: The instance.
- * @error: (optional): An optional return address for a [type@GLib.GError].
+ * purple_connection_get_type:
  *
- * Tells the connection to connect. This is done by calling the
- * [vfunc@Purple.Connection.connect] function. State is managed by this
- * function.
- *
- * The default [vfunc@Purple.Connection.connect] is to call
- * [vfunc@Purple.Protocol.login].
- *
- * Due to the asynchronous nature of network connections, the return value and
- * @error are to be used to do some initial validation before a connection is
- * actually attempted.
- *
- * Returns: %TRUE if the initial connection for @account was successful,
- *          otherwise %FALSE with @error possibly set.
- *
- * Since: 3.0.0
+ * Returns: The #GType for the Connection object.
  */
-gboolean purple_connection_connect(PurpleConnection *connection, GError **error);
-
-/**
- * purple_connection_disconnect:
- * @connection: The instance.
- * @error: (optional): An optional return address for a [type@GLib.GError].
- *
- * Tells the connection to disconnect. This is done by calling the
- * [vfunc@Purple.Connection.disconnect] function. State is managed by this
- * function.
- *
- * The default [vfunc@Purple.Connection.disconnect] is to call
- * [vfunc@Purple.Protocol.close].
- *
- * Returns: %TRUE if the account was disconnected gracefully, otherwise %FALSE
- *          with @error possibly set.
- *
- * Since: 3.0.0
- */
-gboolean purple_connection_disconnect(PurpleConnection *connection, GError **error);
+G_DECLARE_FINAL_TYPE(PurpleConnection, purple_connection, PURPLE, CONNECTION, GObject)
 
 /**
  * purple_connection_set_state:
@@ -298,7 +247,18 @@ PurpleConnectionFlags purple_connection_get_flags(PurpleConnection *gc);
  * Returns: TRUE if the account is connected, otherwise returns FALSE.
  */
 #define PURPLE_CONNECTION_IS_CONNECTED(gc) \
-	(purple_connection_get_state(gc) == PURPLE_CONNECTION_STATE_CONNECTED)
+	(purple_connection_get_state(gc) == PURPLE_CONNECTION_CONNECTED)
+
+/**
+ * purple_connection_is_disconnecting:
+ * @gc: The connection.
+ *
+ * Checks, if connection is in disconnecting state.
+ *
+ * Returns: %TRUE, if the account is disconnecting.
+ */
+gboolean
+purple_connection_is_disconnecting(PurpleConnection *gc);
 
 /**
  * purple_connection_get_id:
@@ -341,23 +301,6 @@ PurpleProtocol *purple_connection_get_protocol(PurpleConnection *gc);
  * Returns: The connection's password.
  */
 const char *purple_connection_get_password(PurpleConnection *gc);
-
-/**
- * purple_connection_set_password:
- * @connection: The instance.
- * @password: (nullable): The new password.
- *
- * Sets the password for @connection to @password.
- *
- * This will not change your password on the remote service. It just updates
- * the password that the protocol should use when connecting.
- *
- * This is generally used by protocol plugins that support multiple
- * authentication methods and need to prompt the user for a password.
- *
- * Since: 3.0.0
- */
-void purple_connection_set_password(PurpleConnection *connection, const char *password);
 
 /**
  * purple_connection_get_active_chats:
@@ -421,38 +364,38 @@ purple_connection_error(PurpleConnection *gc,
 PurpleConnectionErrorInfo *
 purple_connection_get_error_info(PurpleConnection *gc);
 
-/**
- * purple_connection_g_error:
- * @pc: Connection the error is associated with
+/*
+ * purple_connection_g_error
+ * @gc: Connection the error is associated with
  * @error: Error information
  *
- * Closes a connection similar to [method@Purple.Connection.error], but takes a
- * [type@GLib.Error] which is then converted to purple error codes.
+ * Closes a connection similar to purple_connection_error(), but
+ * takes a GError which is then converted to purple error codes.
  *
  * This function ignores G_IO_ERROR_CANCELLED, returning without
  * closing the connection. This can be used as a shortcut when
  * cancelling connections, as this is commonly done when shutting
  * down a connection. If G_IO_ERROR_CANCELLED needs to be caught,
- * do so with [method@GLib.Error.matches] prior to calling this function.
- *
- * Since: 3.0.0
+ * do so with g_error_matches() prior to calling this function.
  */
-void purple_connection_g_error(PurpleConnection *pc, const GError *error);
+void
+purple_connection_g_error(PurpleConnection *pc,
+                          const GError *error);
 
-/**
- * purple_connection_take_error:
- * @pc: Connection the error is associated with
+/*
+ * purple_connection_take_error
+ * @gc: Connection the error is associated with
  * @error: (transfer full): Error information
  *
- * Closes a connection similar to [method@Purple.Connection.error], but takes a
- * [type@GLib.Error] which is then converted to purple error codes.
+ * Closes a connection similar to purple_connection_error(), but
+ * takes a GError which is then converted to purple error codes.
  *
- * This function is equivalent to [method@Purple.Connection.g_error], expect
- * that it takes ownership of the GError.
- *
- * Since: 3.0.0
+ * This function is equivalent to purple_connection_g_error(),
+ * except that it takes ownership of the GError.
  */
-void purple_connection_take_error(PurpleConnection *pc, GError *error);
+void
+purple_connection_take_error(PurpleConnection *pc,
+                             GError *error);
 
 /**
  * purple_connection_error_is_fatal:
@@ -575,6 +518,7 @@ void purple_connections_uninit(void);
  * Returns: The connections subsystem handle.
  */
 void *purple_connections_get_handle(void);
+
 
 G_END_DECLS
 

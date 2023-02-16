@@ -24,7 +24,6 @@
 
 #include <purple.h>
 #include "libpurple/glibcompat.h"
-#include "libpurple/soupcompat.h"
 
 #include "api.h"
 #include "data.h"
@@ -487,21 +486,16 @@ fb_data_image_get_url(FbDataImage *img)
 }
 
 static void
-fb_data_image_cb(GObject *source, GAsyncResult *result, gpointer data) {
-	SoupMessage *msg = data;
-	FbDataImage *img = g_object_get_data(G_OBJECT(msg), "facebook-data-image");
+fb_data_image_cb(G_GNUC_UNUSED SoupSession *session, SoupMessage *res,
+                 gpointer data)
+{
+	FbDataImage *img = data;
 	GError *err = NULL;
 
-	if(fb_http_error_chk(msg, &err)) {
-		GBytes *bytes = NULL;
+	fb_http_error_chk(res, &err);
 
-		bytes = soup_session_send_and_read_finish(SOUP_SESSION(source),
-		                                          result, &err);
-		if(bytes != NULL) {
-			img->image = g_bytes_unref_to_data(bytes, &img->size);
-		}
-	}
-
+	img->image = (guint8 *)res->response_body->data;
+	img->size = res->response_body->length;
 	img->func(img, err);
 
 	if (G_LIKELY(err == NULL)) {
@@ -547,10 +541,8 @@ fb_data_image_queue(FbData *fata)
 		url = fb_data_image_get_url(img);
 
 		msg = soup_message_new("GET", url);
-		g_object_set_data(G_OBJECT(msg), "facebook-data-image", img);
 		// purple_http_request_set_max_len(req, FB_DATA_ICON_SIZE_MAX);
-		soup_session_send_and_read_async(fata->cons, msg, G_PRIORITY_DEFAULT,
-		                                 NULL, fb_data_image_cb, msg);
+		soup_session_queue_message(fata->cons, msg, fb_data_image_cb, img);
 
 		if (++active >= FB_DATA_ICON_MAX) {
 			break;

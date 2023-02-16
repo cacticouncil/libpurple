@@ -63,7 +63,7 @@ G_DECLARE_DERIVABLE_TYPE(PurpleProtocol, purple_protocol, PURPLE, PROTOCOL,
  * @OPT_PROTO_CHAT_TOPIC: Chat rooms have topics.<sbr/>
  *           IRC and XMPP support this.
  * @OPT_PROTO_NO_PASSWORD: Don't require passwords for sign-in.<sbr/>
- *           IRC doesn't require passwords, so there's no need for a
+ *           Zephyr doesn't require passwords, so there's no need for a
  *           password prompt.
  * @OPT_PROTO_MAIL_CHECK: Notify on new mail.<sbr/>
  *           MSN and Yahoo notify you when you have new mail.
@@ -141,13 +141,11 @@ struct _PurpleProtocolClass {
 	PurpleBuddyIconSpec *(*get_buddy_icon_spec)(PurpleProtocol *protocol);
 	PurpleWhiteboardOps *(*get_whiteboard_ops)(PurpleProtocol *protocol);
 
-	void (*login)(PurpleProtocol *protocol, PurpleAccount *account);
+	void (*login)(PurpleAccount *account);
 
-	void (*close)(PurpleProtocol *protocol, PurpleConnection *connection);
+	void (*close)(PurpleConnection *connection);
 
-	PurpleConnection *(*create_connection)(PurpleProtocol *protocol, PurpleAccount *account, const char *password, GError **error);
-
-	GList *(*status_types)(PurpleProtocol *protocol, PurpleAccount *account);
+	GList *(*status_types)(PurpleAccount *account);
 
 	/*< private >*/
 	gpointer reserved[4];
@@ -270,10 +268,10 @@ PurpleWhiteboardOps *purple_protocol_get_whiteboard_ops(PurpleProtocol *protocol
 
 /**
  * purple_protocol_login:
- * @protocol: The instance.
- * @account: The [class@Purple.Account] to login.
+ * @protocol: The #PurpleProtocol instance.
+ * @account: The #PurpleAccount to login.
  *
- * Logs @account in to @protocol.
+ * Logs @account in using @protocol.
  *
  * Since: 3.0.0
  */
@@ -289,24 +287,6 @@ void purple_protocol_login(PurpleProtocol *protocol, PurpleAccount *account);
  * Since: 3.0.0
  */
 void purple_protocol_close(PurpleProtocol *protocol, PurpleConnection *connection);
-
-/**
- * purple_protocol_create_connection:
- * @protocol: The instance.
- * @account: The [class@Purple.Account] for the connection.
- * @password: The password for the account.
- * @error: A return address for a [type@GLib.GError].
- *
- * Creates a [class@PurpleConnection] for @account.
- *
- * A protocol may indicate an error by setting @error and returning %NULL.
- *
- * Returns: (transfer full): The new connection or %NULL with @error possibly
- *          set on error.
- *
- * Since: 3.0.0
- */
-PurpleConnection *purple_protocol_create_connection(PurpleProtocol *protocol, PurpleAccount *account, const char *password, GError **error);
 
 /**
  * purple_protocol_get_status_types:

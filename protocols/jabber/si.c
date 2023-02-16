@@ -29,6 +29,8 @@
 
 #include <glib/gi18n-lib.h>
 
+#include <nice.h>
+
 #include <purple.h>
 
 #include "buddy.h"
@@ -1035,10 +1037,15 @@ jabber_si_xfer_bytestreams_send_init(PurpleXfer *xfer)
 	if (jsx->service) {
 		gchar *public_ip;
 
+		/* Include the localhost's IPs (for in-network transfers) */
+		local_ips = nice_interfaces_get_local_ips(FALSE);
+
 		/* Include the public IP (assuming there is a port mapped somehow) */
 		public_ip = purple_network_get_my_ip_from_gio(
 		        G_SOCKET_CONNECTION(jsx->js->stream));
-		if (!purple_strequal(public_ip, "0.0.0.0")) {
+		if (!purple_strequal(public_ip, "0.0.0.0") &&
+		    g_list_find_custom(local_ips, public_ip, (GCompareFunc)g_strcmp0) ==
+		            NULL) {
 			local_ips = g_list_append(local_ips, public_ip);
 		} else {
 			g_free(public_ip);
@@ -1695,9 +1702,8 @@ jabber_si_thumbnail_cb(JabberData *data, gchar *alt, gpointer userdata)
 }
 #endif
 
-static void
-jabber_si_parse(JabberStream *js, const char *from, JabberIqType type,
-                const char *id, PurpleXmlNode *si)
+void jabber_si_parse(JabberStream *js, const char *from, JabberIqType type,
+                     const char *id, PurpleXmlNode *si)
 {
 	JabberSIXfer *jsx;
 	PurpleXmlNode *file, *feature, *x, *field, *option, *value;

@@ -243,7 +243,7 @@ purple_notify_searchresults_button_add_labeled(PurpleNotifySearchResults *result
 
 
 PurpleNotifySearchResults *
-purple_notify_searchresults_new(void)
+purple_notify_searchresults_new()
 {
 	PurpleNotifySearchResults *rs = g_new0(PurpleNotifySearchResults, 1);
 
@@ -318,6 +318,9 @@ purple_notify_userinfo(PurpleConnection *gc, const char *who,
 	if (ops != NULL && ops->notify_userinfo != NULL) {
 		void *ui_handle;
 
+		purple_signal_emit(purple_notify_get_handle(), "displaying-userinfo",
+						 purple_connection_get_account(gc), who, user_info);
+
 		ui_handle = ops->notify_userinfo(gc, who, user_info);
 
 		if (ui_handle != NULL) {
@@ -365,7 +368,7 @@ purple_notify_user_info_entry_destroy(PurpleNotifyUserInfoEntry *user_info_entry
 }
 
 PurpleNotifyUserInfo *
-purple_notify_user_info_new(void)
+purple_notify_user_info_new()
 {
 	PurpleNotifyUserInfo *user_info;
 
@@ -801,12 +804,40 @@ purple_notify_get_ui_ops(void)
 	return notify_ui_ops;
 }
 
+void *
+purple_notify_get_handle(void)
+{
+	static int handle;
+
+	return &handle;
+}
+
 void
 purple_notify_init(void)
 {
+	gpointer handle = purple_notify_get_handle();
+
+	purple_signal_register(handle, "displaying-email-notification",
+						 purple_marshal_VOID__POINTER_POINTER_POINTER_POINTER,
+						 G_TYPE_NONE, 4, G_TYPE_STRING, G_TYPE_STRING,
+						 G_TYPE_STRING, G_TYPE_STRING);
+
+	purple_signal_register(handle, "displaying-emails-notification",
+						 purple_marshal_VOID__POINTER_POINTER_POINTER_POINTER_UINT,
+						 G_TYPE_NONE, 5, G_TYPE_POINTER, G_TYPE_POINTER,
+						 G_TYPE_POINTER, G_TYPE_POINTER, G_TYPE_UINT);
+
+	purple_signal_register(handle, "displaying-emails-clear",
+						 purple_marshal_VOID, G_TYPE_NONE, 0);
+
+	purple_signal_register(handle, "displaying-userinfo",
+						 purple_marshal_VOID__POINTER_POINTER_POINTER,
+						 G_TYPE_NONE, 3, PURPLE_TYPE_ACCOUNT, G_TYPE_STRING,
+						 PURPLE_TYPE_NOTIFY_USER_INFO);
 }
 
 void
 purple_notify_uninit(void)
 {
+	purple_signals_unregister_by_instance(purple_notify_get_handle());
 }

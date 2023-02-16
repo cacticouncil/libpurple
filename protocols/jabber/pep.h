@@ -31,8 +31,7 @@
 void jabber_pep_init(void);
 void jabber_pep_uninit(void);
 
-void jabber_pep_add_action_entries(GSimpleActionGroup *group);
-void jabber_pep_append_menu(GMenu *menu);
+void jabber_pep_init_actions(GList **m);
 
 /*
  * Callback for receiving PEP events.
@@ -75,6 +74,11 @@ void jabber_pep_request_item(JabberStream *js, const char *to, const char *node,
 gboolean jabber_pep_namespace_only_when_pep_enabled_cb(JabberStream *js, const gchar *namespace);
 
 void jabber_handle_event(JabberMessage *jm);
+
+/**
+ * Delete the specified PEP node.
+ */
+void jabber_pep_delete_node(JabberStream *js, const gchar *node);
 
 /*
  * Publishes PEP item(s)

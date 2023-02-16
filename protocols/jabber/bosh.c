@@ -65,13 +65,13 @@ jabber_bosh_connection_send_now(PurpleJabberBOSHConnection *conn);
 void
 jabber_bosh_init(void)
 {
-	PurpleUi *ui = purple_core_get_ui();
+	PurpleUiInfo *ui_info = purple_core_get_ui_info();
 	const gchar *ui_name = NULL;
 	const gchar *ui_version = NULL;
 
-	if(PURPLE_IS_UI(ui)) {
-		ui_name = purple_ui_get_name(ui);
-		ui_version = purple_ui_get_version(ui);
+	if(PURPLE_IS_UI_INFO(ui_info)) {
+		ui_name = purple_ui_info_get_name(ui_info);
+		ui_version = purple_ui_info_get_version(ui_info);
 	}
 
 	if(ui_name) {
@@ -182,16 +182,13 @@ jabber_bosh_connection_is_ssl(const PurpleJabberBOSHConnection *conn)
 
 static PurpleXmlNode *
 jabber_bosh_connection_parse(PurpleJabberBOSHConnection *conn,
-                             SoupMessage *msg, GBytes *response_body,
-                             GError *error)
+                             SoupMessage *response)
 {
-	gconstpointer body = NULL;
-	gsize length = 0;
 	PurpleXmlNode *root;
 	const gchar *type;
 
 	g_return_val_if_fail(conn != NULL, NULL);
-	g_return_val_if_fail(msg != NULL, NULL);
+	g_return_val_if_fail(response != NULL, NULL);
 
 	if (conn->is_terminating || purple_account_is_disconnecting(
 		purple_connection_get_account(conn->js->gc)))
@@ -199,19 +196,17 @@ jabber_bosh_connection_parse(PurpleJabberBOSHConnection *conn,
 		return NULL;
 	}
 
-	if(error != NULL ||
-	   !SOUP_STATUS_IS_SUCCESSFUL(soup_message_get_status(msg))) {
-		gchar *tmp = g_strdup_printf(
-		    _("Unable to connect: %s"),
-		    error ? error->message : soup_message_get_reason_phrase(msg));
+	if (!SOUP_STATUS_IS_SUCCESSFUL(soup_message_get_status(response))) {
+		gchar *tmp = g_strdup_printf(_("Unable to connect: %s"),
+		                             soup_message_get_reason_phrase(response));
 		purple_connection_error(conn->js->gc,
 		                        PURPLE_CONNECTION_ERROR_NETWORK_ERROR, tmp);
 		g_free(tmp);
 		return NULL;
 	}
 
-	body = g_bytes_get_data(response_body, &length);
-	root = purple_xmlnode_from_str(body, length);
+	root = purple_xmlnode_from_str(response->response_body->data,
+	                               response->response_body->length);
 
 	type = purple_xmlnode_get_attrib(root, "type");
 	if (purple_strequal(type, "terminate")) {
@@ -226,36 +221,20 @@ jabber_bosh_connection_parse(PurpleJabberBOSHConnection *conn,
 }
 
 static void
-jabber_bosh_connection_recv(GObject *source, GAsyncResult *result,
-                            gpointer data)
+jabber_bosh_connection_recv(SoupSession *session, SoupMessage *msg,
+                            gpointer user_data)
 {
-	SoupMessage *msg = data;
-	PurpleJabberBOSHConnection *bosh_conn = NULL;
-	GBytes *response_body = NULL;
-	GError *error = NULL;
+	PurpleJabberBOSHConnection *bosh_conn = user_data;
 	PurpleXmlNode *node, *child;
 
-	response_body = soup_session_send_and_read_finish(SOUP_SESSION(source),
-	                                                  result, &error);
-	bosh_conn = g_object_get_data(G_OBJECT(msg), "bosh-connection");
-
-	if (response_body != NULL && purple_debug_is_verbose() &&
-	    purple_debug_is_unsafe())
-	{
-		const gchar *body = NULL;
-		gsize length = 0;
-
-		body = g_bytes_get_data(response_body, &length);
-		purple_debug_misc("jabber-bosh", "received: %*s", (int)length, body);
+	if (purple_debug_is_verbose() && purple_debug_is_unsafe()) {
+		purple_debug_misc("jabber-bosh", "received: %s\n",
+		                  msg->response_body->data);
 	}
 
-	node = jabber_bosh_connection_parse(bosh_conn, msg, response_body, error);
-	g_clear_pointer(&response_body, g_bytes_unref);
-	g_clear_error(&error);
-
-	if (node == NULL) {
+	node = jabber_bosh_connection_parse(bosh_conn, msg);
+	if (node == NULL)
 		return;
-	}
 
 	child = node->child;
 	while (child != NULL) {
@@ -334,19 +313,12 @@ jabber_bosh_connection_send_now(PurpleJabberBOSHConnection *conn)
 	g_string_free(data, FALSE);
 
 	if (conn->is_terminating) {
-#if SOUP_MAJOR_VERSION >= 3
-		soup_session_send_async(conn->payload_reqs, req, G_PRIORITY_DEFAULT,
-		                        NULL, NULL, NULL);
-#else
 		soup_session_send_async(conn->payload_reqs, req, NULL, NULL, NULL);
-#endif
 		g_free(conn->sid);
 		conn->sid = NULL;
 	} else {
-		g_object_set_data(G_OBJECT(req), "bosh-connection", conn);
-		soup_session_send_and_read_async(conn->payload_reqs, req,
-		                                 G_PRIORITY_DEFAULT, NULL,
-		                                 jabber_bosh_connection_recv, req);
+		soup_session_queue_message(conn->payload_reqs, req,
+		                           jabber_bosh_connection_recv, conn);
 	}
 }
 
@@ -407,39 +379,22 @@ jabber_bosh_version_check(const gchar *version, int major_req, int minor_min)
 }
 
 static void
-jabber_bosh_connection_session_created(GObject *source, GAsyncResult *result,
-                                       gpointer data)
+jabber_bosh_connection_session_created(SoupSession *session, SoupMessage *msg,
+                                       gpointer user_data)
 {
-	SoupMessage *msg = data;
-	PurpleJabberBOSHConnection *bosh_conn = NULL;
-	GBytes *response_body = NULL;
-	GError *error = NULL;
+	PurpleJabberBOSHConnection *bosh_conn = user_data;
 	PurpleXmlNode *node, *features;
 	const gchar *sid, *ver, *inactivity_str;
 	int inactivity = 0;
 
-	response_body = soup_session_send_and_read_finish(SOUP_SESSION(source),
-	                                                  result, &error);
-	bosh_conn = g_object_get_data(G_OBJECT(msg), "bosh-connection");
-
-	if (response_body != NULL && purple_debug_is_verbose() &&
-	    purple_debug_is_unsafe())
-	{
-		const gchar *body = NULL;
-		gsize length = 0;
-
-		body = g_bytes_get_data(response_body, &length);
-		purple_debug_misc("jabber-bosh", "received (session creation): %*s",
-		                  (int)length, body);
+	if (purple_debug_is_verbose() && purple_debug_is_unsafe()) {
+		purple_debug_misc("jabber-bosh", "received (session creation): %s\n",
+		                  msg->response_body->data);
 	}
 
-	node = jabber_bosh_connection_parse(bosh_conn, msg, response_body, error);
-	g_clear_pointer(&response_body, g_bytes_unref);
-	g_clear_error(&error);
-
-	if (node == NULL) {
+	node = jabber_bosh_connection_parse(bosh_conn, msg);
+	if (node == NULL)
 		return;
-	}
 
 	sid = purple_xmlnode_get_attrib(node, "sid");
 	ver = purple_xmlnode_get_attrib(node, "ver");
@@ -529,11 +484,8 @@ jabber_bosh_connection_session_create(PurpleJabberBOSHConnection *conn)
 	req = jabber_bosh_connection_http_request_new(conn, data);
 	g_string_free(data, FALSE);
 
-	g_object_set_data(G_OBJECT(req), "bosh-connection", conn);
-	soup_session_send_and_read_async(conn->payload_reqs, req,
-	                                 G_PRIORITY_DEFAULT, NULL,
-	                                 jabber_bosh_connection_session_created,
-	                                 req);
+	soup_session_queue_message(conn->payload_reqs, req,
+	                           jabber_bosh_connection_session_created, conn);
 }
 
 static SoupMessage *

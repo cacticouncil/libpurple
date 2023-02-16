@@ -1373,7 +1373,7 @@ do_transfer(PurpleXfer *xfer)
 		   if it needs to for some odd reason. */
 		if (s == 0) {
 			if (priv->watcher) {
-				g_source_remove(priv->watcher);
+				purple_input_remove(priv->watcher);
 				purple_xfer_set_watcher(xfer, 0);
 			}
 			return;
@@ -1399,7 +1399,7 @@ do_transfer(PurpleXfer *xfer)
 				 * sets back up this watcher.
 				 */
 				if (priv->watcher != 0) {
-					g_source_remove(priv->watcher);
+					purple_input_remove(priv->watcher);
 					purple_xfer_set_watcher(xfer, 0);
 				}
 
@@ -1492,7 +1492,7 @@ transfer_cb(gpointer data, gint source, PurpleInputCondition condition)
 		if (0 == (priv->ready & PURPLE_XFER_READY_UI)) {
 			priv->ready |= PURPLE_XFER_READY_PROTOCOL;
 
-			g_source_remove(priv->watcher);
+			purple_input_remove(priv->watcher);
 			purple_xfer_set_watcher(xfer, 0);
 
 			purple_debug_misc("xfer", "Protocol is ready on ft %p, waiting for UI\n", xfer);
@@ -1730,7 +1730,7 @@ purple_xfer_end(PurpleXfer *xfer)
 	}
 
 	if (priv->watcher != 0) {
-		g_source_remove(priv->watcher);
+		purple_input_remove(priv->watcher);
 		purple_xfer_set_watcher(xfer, 0);
 	}
 
@@ -1807,7 +1807,7 @@ purple_xfer_cancel_local(PurpleXfer *xfer)
 	}
 
 	if (priv->watcher != 0) {
-		g_source_remove(priv->watcher);
+		purple_input_remove(priv->watcher);
 		purple_xfer_set_watcher(xfer, 0);
 	}
 
@@ -1871,7 +1871,7 @@ purple_xfer_cancel_remote(PurpleXfer *xfer)
 	}
 
 	if (priv->watcher != 0) {
-		g_source_remove(priv->watcher);
+		purple_input_remove(priv->watcher);
 		purple_xfer_set_watcher(xfer, 0);
 	}
 
@@ -2456,7 +2456,7 @@ purple_xfer_new(PurpleAccount *account, PurpleXferType type, const char *who)
  * File Transfer Subsystem API
  **************************************************************************/
 GList *
-purple_xfers_get_all(void)
+purple_xfers_get_all()
 {
 	return xfers;
 }

@@ -83,6 +83,32 @@ void purple_util_init(void);
 void purple_util_uninit(void);
 
 /**************************************************************************/
+/* Date/Time Functions                                                    */
+/**************************************************************************/
+
+/**
+ * purple_date_format_full:
+ * @tm: The time to format, or %NULL to use the current local time
+ *
+ * Formats a time into the user's preferred full date and time format.
+ *
+ * The returned string is stored in a static buffer, so the result
+ * should be g_strdup()'d if it's going to be kept.
+ *
+ * Returns: The date and time, formatted as per the user's settings.  In the
+ *         USA this is something like "Mon Feb 18 15:26:44 2013"
+ */
+const char *purple_date_format_full(const struct tm *tm);
+
+/**
+ * PURPLE_NO_TZ_OFF:
+ *
+ * Used by purple_str_to_time to indicate no timezone offset was
+ * specified in the timestamp string.
+ */
+#define PURPLE_NO_TZ_OFF -500000
+
+/**************************************************************************/
 /* Path/Filename Functions                                                */
 /**************************************************************************/
 
@@ -377,6 +403,18 @@ char *purple_utf8_ncr_encode(const char *in);
 char *purple_utf8_ncr_decode(const char *in);
 
 /**
+ * purple_strcasestr:
+ * @haystack: The string to search in.
+ * @needle:   The substring to find.
+ *
+ * This is like strstr, except that it ignores ASCII case in
+ * searching for the substring.
+ *
+ * Returns: the location of the substring if found, or NULL if not
+ */
+const char *purple_strcasestr(const char *haystack, const char *needle);
+
+/**
  * purple_str_seconds_to_string:
  * @sec: The seconds.
  *
@@ -424,6 +462,47 @@ const char *purple_url_encode(const char *str);
  * Returns: True if the email address is syntactically correct.
  */
 gboolean purple_email_is_valid(const char *address);
+
+/**
+ * purple_uri_list_extract_uris:
+ * @uri_list: An uri-list in the standard format.
+ *
+ * This function extracts a list of URIs from the a "text/uri-list"
+ * string.  It was "borrowed" from gnome_uri_list_extract_uris
+ *
+ * Returns: (element-type utf8) (transfer full): A list of strings that have
+ *          been split from uri-list.
+ */
+GList *purple_uri_list_extract_uris(const gchar *uri_list);
+
+/**
+ * purple_uri_list_extract_filenames:
+ * @uri_list: A uri-list in the standard format.
+ *
+ * This function extracts a list of filenames from a
+ * "text/uri-list" string.  It was "borrowed" from
+ * gnome_uri_list_extract_filenames
+ *
+ * Returns: (element-type utf8) (transfer full): A list of strings that contain
+ *          the filenames in the uri-list. Note that unlike the
+ *          purple_uri_list_extract_uris() function, this will discard any
+ *          non-file uri from the result value.
+ */
+GList *purple_uri_list_extract_filenames(const gchar *uri_list);
+
+/**
+ * purple_uri_escape_for_open:
+ * @unescaped: The unescaped URI.
+ *
+ * This function escapes any characters that might be interpreted by the shell
+ * when executing a program to open a URI on some systems.
+ *
+ * Returns: A newly allocated string with any shell metacharacters replaced
+ *          with their escaped equivalents.
+ *
+ * Since: 2.13.0
+ */
+char *purple_uri_escape_for_open(const char *unescaped);
 
 /**************************************************************************
  * UTF8 String Functions

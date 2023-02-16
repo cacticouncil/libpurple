@@ -261,7 +261,7 @@ proxy_pref_cb(const char *name, PurplePrefType type,
 }
 
 void *
-purple_proxy_get_handle(void)
+purple_proxy_get_handle()
 {
 	static int handle;
 

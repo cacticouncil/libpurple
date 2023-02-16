@@ -48,6 +48,39 @@ purple_util_uninit(void) {
 }
 
 /**************************************************************************
+ * Date/Time Functions
+ **************************************************************************/
+const char *
+purple_date_format_full(const struct tm *tm)
+{
+	static char buf[128];
+	GDateTime *dt;
+	char *utf8;
+
+	if (tm == NULL)
+	{
+		dt = g_date_time_new_now_local();
+	} else {
+		dt = g_date_time_new_local(tm->tm_year + 1900, tm->tm_mon + 1,
+				tm->tm_mday, tm->tm_hour,
+				tm->tm_min, tm->tm_sec);
+	}
+
+	utf8 = g_date_time_format(dt, "%c");
+	g_date_time_unref(dt);
+
+	if (utf8 == NULL) {
+		purple_debug_error("util",
+				"purple_date_format_full(): Formatting failed\n");
+		return "";
+	}
+
+	g_strlcpy(buf, utf8, sizeof(buf));
+	g_free(utf8);
+	return buf;
+}
+
+/**************************************************************************
  * Path/Filename Functions
  **************************************************************************/
 static gboolean
@@ -341,6 +374,41 @@ purple_strreplace(const char *string, const char *delimiter,
 	return ret;
 }
 
+/* TODO: Expose this when we can add API */
+static const char *
+purple_strcasestr_len(const char *haystack, gssize hlen, const char *needle, gssize nlen)
+{
+	const char *tmp, *ret;
+
+	g_return_val_if_fail(haystack != NULL, NULL);
+	g_return_val_if_fail(needle != NULL, NULL);
+
+	if (hlen == -1)
+		hlen = strlen(haystack);
+	if (nlen == -1)
+		nlen = strlen(needle);
+	tmp = haystack,
+	ret = NULL;
+
+	g_return_val_if_fail(hlen > 0, NULL);
+	g_return_val_if_fail(nlen > 0, NULL);
+
+	while (*tmp && !ret && (hlen - (tmp - haystack)) >= nlen) {
+		if (!g_ascii_strncasecmp(needle, tmp, nlen))
+			ret = tmp;
+		else
+			tmp++;
+	}
+
+	return ret;
+}
+
+const char *
+purple_strcasestr(const char *haystack, const char *needle)
+{
+	return purple_strcasestr_len(haystack, -1, needle, -1);
+}
+
 char *
 purple_str_seconds_to_string(guint secs)
 {
@@ -579,6 +647,93 @@ purple_email_is_valid(const char *address)
 	if (*(c - 1) == '-') return FALSE;
 
 	return ((c - domain) > 3 ? TRUE : FALSE);
+}
+
+/* Stolen from gnome_uri_list_extract_uris */
+GList *
+purple_uri_list_extract_uris(const gchar *uri_list)
+{
+	const gchar *p, *q;
+	gchar *retval;
+	GList *result = NULL;
+
+	g_return_val_if_fail (uri_list != NULL, NULL);
+
+	p = uri_list;
+
+	/* We don't actually try to validate the URI according to RFC
+	* 2396, or even check for allowed characters - we just ignore
+	* comments and trim whitespace off the ends.  We also
+	* allow LF delimination as well as the specified CRLF.
+	*/
+	while (p) {
+		if (*p != '#') {
+			while (isspace(*p))
+				p++;
+
+			q = p;
+			while (*q && (*q != '\n') && (*q != '\r'))
+				q++;
+
+			if (q > p) {
+				q--;
+				while (q > p && isspace(*q))
+					q--;
+
+				retval = (gchar*)g_malloc (q - p + 2);
+				strncpy (retval, p, q - p + 1);
+				retval[q - p + 1] = '\0';
+
+				result = g_list_prepend (result, retval);
+			}
+		}
+		p = strchr (p, '\n');
+		if (p)
+			p++;
+	}
+
+	return g_list_reverse (result);
+}
+
+
+/* Stolen from gnome_uri_list_extract_filenames */
+GList *
+purple_uri_list_extract_filenames(const gchar *uri_list)
+{
+	GList *tmp_list, *node, *result;
+
+	g_return_val_if_fail (uri_list != NULL, NULL);
+
+	result = purple_uri_list_extract_uris(uri_list);
+
+	tmp_list = result;
+	while (tmp_list) {
+		gchar *s = (gchar*)tmp_list->data;
+
+		node = tmp_list;
+		tmp_list = tmp_list->next;
+
+		if (!strncmp (s, "file:", 5)) {
+			node->data = g_filename_from_uri (s, NULL, NULL);
+			/* not sure if this fallback is useful at all */
+			if (!node->data) node->data = g_strdup (s+5);
+		} else {
+			result = g_list_delete_link(result, node);
+		}
+		g_free (s);
+	}
+	return result;
+}
+
+char *
+purple_uri_escape_for_open(const char *unescaped)
+{
+	/* Replace some special characters like $ with their percent-encoded value.
+	 * This shouldn't be necessary because we shell-escape the entire arg before
+	 * exec'ing the browser, however, we had a report that a URL containing
+	 * $(xterm) was causing xterm to start on his system. This is obviously a
+	 * bug on his system, but it's pretty easy for us to protect against it. */
+	return g_uri_escape_string(unescaped, "[]:;/%#,+?=&@", FALSE);
 }
 
 /**************************************************************************
@@ -931,47 +1086,39 @@ purple_escape_filename(const char *str)
 	return buf;
 }
 
+static void
+set_status_with_attrs(PurpleStatus *status, ...)
+{
+	va_list args;
+	va_start(args, status);
+	purple_status_set_active_with_attrs(status, TRUE, args);
+	va_end(args);
+}
+
 void purple_util_set_current_song(const char *title, const char *artist, const char *album)
 {
-	GListModel *manager_model = NULL;
-	guint n_items = 0;
-
-	manager_model = purple_account_manager_get_default_as_model();
-	n_items = g_list_model_get_n_items(manager_model);
-	for(guint index = 0; index < n_items; index++) {
-		PurpleAccount *account = g_list_model_get_item(manager_model, index);
+	PurpleAccountManager *manager = purple_account_manager_get_default();
+	GList *list = purple_account_manager_get_all(manager);
+	for (; list; list = list->next) {
 		PurplePresence *presence;
 		PurpleStatus *tune;
-
-		if (!purple_account_get_enabled(account)) {
-			g_object_unref(account);
+		PurpleAccount *account = list->data;
+		if (!purple_account_get_enabled(account))
 			continue;
-		}
 
 		presence = purple_account_get_presence(account);
 		tune = purple_presence_get_status(presence, "tune");
-		if (!tune) {
-			g_object_unref(account);
+		if (!tune)
 			continue;
-		}
 		if (title) {
-			GHashTable *attributes = g_hash_table_new(g_str_hash, g_str_equal);
-
-			g_hash_table_insert(attributes, PURPLE_TUNE_TITLE,
-			                    (gpointer)title);
-			g_hash_table_insert(attributes, PURPLE_TUNE_ARTIST,
-			                    (gpointer)artist);
-			g_hash_table_insert(attributes, PURPLE_TUNE_TITLE,
-			                    (gpointer)album);
-
-			purple_status_set_active_with_attributes(tune, TRUE, attributes);
-
-			g_hash_table_destroy(attributes);
+			set_status_with_attrs(tune,
+					PURPLE_TUNE_TITLE, title,
+					PURPLE_TUNE_ARTIST, artist,
+					PURPLE_TUNE_ALBUM, album,
+					NULL);
 		} else {
 			purple_status_set_active(tune, FALSE);
 		}
-
-		g_object_unref(account);
 	}
 }
 

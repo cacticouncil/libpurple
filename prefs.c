@@ -386,7 +386,7 @@ static GMarkupParser prefs_parser = {
 };
 
 gboolean
-purple_prefs_load(void)
+purple_prefs_load()
 {
 	gchar *filename;
 	gchar *contents = NULL;
@@ -792,7 +792,7 @@ purple_prefs_remove(const char *name)
 }
 
 void
-purple_prefs_destroy(void)
+purple_prefs_destroy()
 {
 	purple_prefs_remove("/");
 }
@@ -1454,6 +1454,31 @@ purple_prefs_init(void)
 	purple_prefs_add_bool("/purple/away/away_when_idle", TRUE);
 	purple_prefs_add_int("/purple/away/mins_before_away", 5);
 
+	/* Away -> Auto-Reply */
+	if (!purple_prefs_exists("/purple/away/auto_response/enabled") ||
+	    !purple_prefs_exists("/purple/away/auto_response/idle_only"))
+	{
+		purple_prefs_add_string("/purple/away/auto_reply", "awayidle");
+	}
+	else
+	{
+		if (!purple_prefs_get_bool("/purple/away/auto_response/enabled"))
+		{
+			purple_prefs_add_string("/purple/away/auto_reply", "never");
+		}
+		else
+		{
+			if (purple_prefs_get_bool("/purple/away/auto_response/idle_only"))
+			{
+				purple_prefs_add_string("/purple/away/auto_reply", "awayidle");
+			}
+			else
+			{
+				purple_prefs_add_string("/purple/away/auto_reply", "away");
+			}
+		}
+	}
+
 	/* Buddies */
 	purple_prefs_add_none("/purple/buddies");
 
@@ -1469,7 +1494,7 @@ purple_prefs_init(void)
 }
 
 void
-purple_prefs_uninit(void)
+purple_prefs_uninit()
 {
 	if (save_timer != 0)
 	{

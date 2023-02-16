@@ -59,13 +59,13 @@ jabber_buddy_resource_free(JabberBuddyResource *jbr)
 	g_return_if_fail(jbr != NULL);
 
 	g_list_free_full(jbr->commands, (GDestroyNotify)jabber_adhoc_commands_free);
+	g_list_free_full(jbr->caps.exts, g_free);
 	g_free(jbr->name);
 	g_free(jbr->status);
 	g_free(jbr->thread_id);
 	g_free(jbr->client.name);
 	g_free(jbr->client.version);
 	g_free(jbr->client.os);
-	g_clear_pointer(&jbr->tz_off, g_time_zone_unref);
 	g_free(jbr);
 }
 
@@ -218,6 +218,7 @@ JabberBuddyResource *jabber_buddy_track_resource(JabberBuddy *jb, const char *re
 		jbr->jb = jb;
 		jbr->name = g_strdup(resource);
 		jbr->capabilities = JABBER_CAP_NONE;
+		jbr->tz_off = PURPLE_NO_TZ_OFF;
 	}
 	jbr->priority = priority;
 	jbr->state = state;
@@ -600,20 +601,15 @@ jabber_format_info(PurpleConnection *gc, PurpleRequestFields *fields)
 }
 
 /*
- * This gets executed as the protocol action.
+ * This gets executed by the proto action
  *
  * Creates a new PurpleRequestFields struct, gets the XML-formatted user_info
  * string (if any) into GSLists for the (multi-entry) edit dialog and
  * calls the set_vcard dialog.
  */
-void
-jabber_setup_set_info(G_GNUC_UNUSED GSimpleAction *action, GVariant *parameter,
-                      G_GNUC_UNUSED gpointer data)
+void jabber_setup_set_info(PurpleProtocolAction *action)
 {
-	const char *account_id = NULL;
-	PurpleAccountManager *manager = NULL;
-	PurpleAccount *account = NULL;
-	PurpleConnection *connection = NULL;
+	PurpleConnection *gc = (PurpleConnection *) action->connection;
 	PurpleRequestFields *fields;
 	PurpleRequestFieldGroup *group;
 	PurpleRequestField *field;
@@ -622,16 +618,6 @@ jabber_setup_set_info(G_GNUC_UNUSED GSimpleAction *action, GVariant *parameter,
 	char *cdata = NULL;
 	PurpleXmlNode *x_vc_data = NULL;
 
-	if(!g_variant_is_of_type(parameter, G_VARIANT_TYPE_STRING)) {
-		g_critical("XMPP Set Info action parameter is of incorrect type %s",
-		           g_variant_get_type_string(parameter));
-	}
-
-	account_id = g_variant_get_string(parameter, NULL);
-	manager = purple_account_manager_get_default();
-	account = purple_account_manager_find_by_id(manager, account_id);
-	connection = purple_account_get_connection(account);
-
 	fields = purple_request_fields_new();
 	group = purple_request_field_group_new(NULL);
 	purple_request_fields_add_group(fields, group);
@@ -639,9 +625,8 @@ jabber_setup_set_info(G_GNUC_UNUSED GSimpleAction *action, GVariant *parameter,
 	/*
 	 * Get existing, XML-formatted, user info
 	 */
-	if((user_info = purple_account_get_user_info(account)) != NULL) {
+	if((user_info = purple_account_get_user_info(purple_connection_get_account(gc))) != NULL)
 		x_vc_data = purple_xmlnode_from_str(user_info, -1);
-	}
 
 	/*
 	 * Set up GSLists for edit with labels from "template," data from user info
@@ -682,15 +667,15 @@ jabber_setup_set_info(G_GNUC_UNUSED GSimpleAction *action, GVariant *parameter,
 	if(x_vc_data != NULL)
 		purple_xmlnode_free(x_vc_data);
 
-	purple_request_fields(connection, _("Edit XMPP vCard"),
-	                      _("Edit XMPP vCard"),
-	                      _("All items below are optional. Enter only the "
-	                        "information with which you feel comfortable."),
-	                      fields,
-	                      _("Save"), G_CALLBACK(jabber_format_info),
-	                      _("Cancel"), NULL,
-	                      purple_request_cpar_from_connection(connection),
-	                      connection);
+	purple_request_fields(gc, _("Edit XMPP vCard"),
+						_("Edit XMPP vCard"),
+						_("All items below are optional. Enter only the "
+						  "information with which you feel comfortable."),
+						fields,
+						_("Save"), G_CALLBACK(jabber_format_info),
+						_("Cancel"), NULL,
+						purple_request_cpar_from_connection(gc),
+						gc);
 }
 
 /*---------------------------------------*/
@@ -742,11 +727,14 @@ add_jbr_info(JabberBuddyInfo *jbi, const char *resource,
 		}
 	}
 
-	if (jbr && jbr->tz_off != NULL) {
+	if (jbr && jbr->tz_off != PURPLE_NO_TZ_OFF) {
 		GDateTime *dt = NULL;
+		GTimeZone *tz = NULL;
 		char *timestamp = NULL;
 
-		dt = g_date_time_new_now(jbr->tz_off);
+		tz = g_time_zone_new_offset(jbr->tz_off);
+		dt = g_date_time_new_now(tz);
+		g_time_zone_unref(tz);
 
 		timestamp = g_date_time_format(dt, "%X %:z");
 		g_date_time_unref(dt);
@@ -1407,20 +1395,15 @@ static void jabber_time_parse(JabberStream *js, const char *from,
 				char *c = tzo_data;
 				int hours, minutes;
 				if (tzo_data[0] == 'Z' && tzo_data[1] == '\0') {
-					jbr->tz_off = g_time_zone_new_offset(0);
+					jbr->tz_off = 0;
 				} else {
 					gboolean offset_positive = (tzo_data[0] == '+');
 					/* [+-]HH:MM */
 					if (((*c == '+' || *c == '-') && (c = c + 1)) &&
-							sscanf(c, "%02d:%02d", &hours, &minutes) == 2)
-					{
-						gint32 tz_off = 60*60*hours + 60*minutes;
-						if (!offset_positive) {
-							tz_off *= -1;
-						}
-
-						jbr->tz_off = g_time_zone_new_offset(tz_off);
-
+							sscanf(c, "%02d:%02d", &hours, &minutes) == 2) {
+						jbr->tz_off = 60*60*hours + 60*minutes;
+						if (!offset_positive)
+							jbr->tz_off *= -1;
 					} else {
 						purple_debug_info("jabber", "Ignoring malformed timezone %s",
 						                  tzo_data);
@@ -1521,9 +1504,9 @@ dispatch_queries_for_resource(JabberStream *js, JabberBuddyInfo *jbi,
 		jabber_iq_send(iq);
 	}
 
-	if (jbr->tz_off == NULL &&
-			(jbr->caps == NULL ||
-				jabber_resource_has_capability(jbr, NS_ENTITY_TIME))) {
+	if (jbr->tz_off == PURPLE_NO_TZ_OFF &&
+			(!jbr->caps.info ||
+			 	jabber_resource_has_capability(jbr, NS_ENTITY_TIME))) {
 		PurpleXmlNode *child;
 		iq = jabber_iq_new(js, JABBER_IQ_GET);
 		purple_xmlnode_set_attrib(iq->node, "to", to);
@@ -2183,8 +2166,7 @@ static void user_search_fields_result_cb(JabberStream *js, const char *from,
 	}
 }
 
-static void
-jabber_user_search(JabberStream *js, const char *directory)
+void jabber_user_search(JabberStream *js, const char *directory)
 {
 	JabberIq *iq;
 
@@ -2214,61 +2196,69 @@ jabber_user_search(JabberStream *js, const char *directory)
 	jabber_iq_send(iq);
 }
 
-void
-jabber_user_search_begin(G_GNUC_UNUSED GSimpleAction *action,
-                         GVariant *parameter, G_GNUC_UNUSED gpointer data)
+void jabber_user_search_begin(PurpleProtocolAction *action)
 {
-	const char *account_id = NULL;
-	PurpleAccountManager *manager = NULL;
-	PurpleAccount *account = NULL;
-	PurpleConnection *connection = NULL;
-	JabberStream *js = NULL;
-	const char *def_val = NULL;
-
-	if(!g_variant_is_of_type(parameter, G_VARIANT_TYPE_STRING)) {
-		g_critical("XMPP User Search action parameter is of incorrect type %s",
-		           g_variant_get_type_string(parameter));
-	}
-
-	account_id = g_variant_get_string(parameter, NULL);
-	manager = purple_account_manager_get_default();
-	account = purple_account_manager_find_by_id(manager, account_id);
-	connection = purple_account_get_connection(account);
-
-	js = purple_connection_get_protocol_data(connection);
-	def_val = purple_account_get_string(account, "user_directory", "");
-	if(*def_val == '\0' && js->user_directories) {
+	PurpleConnection *gc = (PurpleConnection *) action->connection;
+	JabberStream *js = purple_connection_get_protocol_data(gc);
+	const char *def_val = purple_account_get_string(purple_connection_get_account(js->gc), "user_directory", "");
+	if(!*def_val && js->user_directories)
 		def_val = js->user_directories->data;
-	}
 
-	purple_request_input(connection, _("Enter a User Directory"),
-	                     _("Enter a User Directory"),
-	                     _("Select a user directory to search"),
-	                     def_val, FALSE, FALSE, NULL,
-	                     _("Search Directory"), G_CALLBACK(jabber_user_search),
-	                     _("Cancel"), NULL,
-	                     NULL, js);
+	purple_request_input(gc, _("Enter a User Directory"), _("Enter a User Directory"),
+			_("Select a user directory to search"),
+			def_val,
+			FALSE, FALSE, NULL,
+			_("Search Directory"), G_CALLBACK(jabber_user_search),
+			_("Cancel"), NULL,
+			NULL, js);
 }
 
 gboolean
 jabber_resource_know_capabilities(const JabberBuddyResource *jbr)
 {
-	return jbr->caps != NULL;
+	return jbr->caps.info != NULL;
 }
 
 gboolean
 jabber_resource_has_capability(const JabberBuddyResource *jbr, const gchar *cap)
 {
 	const GList *node = NULL;
+	const JabberCapsNodeExts *exts;
 
-	if (jbr->caps == NULL) {
+	if (!jbr->caps.info) {
 		purple_debug_info("jabber",
 			"Unable to find caps: nothing known about buddy\n");
 		return FALSE;
 	}
 
-	node = g_list_find_custom(jbr->caps->features, cap, (GCompareFunc)strcmp);
+	node = g_list_find_custom(jbr->caps.info->features, cap, (GCompareFunc)strcmp);
+	if (!node && jbr->caps.exts && jbr->caps.info->exts) {
+		const GList *ext;
+		exts = jbr->caps.info->exts;
+		/* Walk through all the enabled caps, checking each list for the cap.
+		 * Don't check it twice, though. */
+		for (ext = jbr->caps.exts; ext && !node; ext = ext->next) {
+			GList *features = g_hash_table_lookup(exts->exts, ext->data);
+			if (features)
+				node = g_list_find_custom(features, cap, (GCompareFunc)strcmp);
+		}
+	}
+
 	return (node != NULL);
+}
+
+gboolean
+jabber_buddy_has_capability(const JabberBuddy *jb, const gchar *cap)
+{
+	JabberBuddyResource *jbr = jabber_buddy_find_resource((JabberBuddy*)jb, NULL);
+
+	if (!jbr) {
+		purple_debug_info("jabber",
+			"Unable to find caps: buddy might be offline\n");
+		return FALSE;
+	}
+
+	return jabber_resource_has_capability(jbr, cap);
 }
 
 const gchar *
@@ -2277,8 +2267,8 @@ jabber_resource_get_identity_category_type(const JabberBuddyResource *jbr,
 {
 	const GList *iter = NULL;
 
-	if (jbr->caps != NULL) {
-		for (iter = jbr->caps->identities ; iter ; iter = g_list_next(iter)) {
+	if (jbr->caps.info) {
+		for (iter = jbr->caps.info->identities ; iter ; iter = g_list_next(iter)) {
 			const JabberIdentity *identity =
 				(JabberIdentity *) iter->data;
 

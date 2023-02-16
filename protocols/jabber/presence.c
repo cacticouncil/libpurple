@@ -50,10 +50,6 @@ static const struct {
 	/* { NULL, JABBER_PRESENCE_AVAILABLE } the default */
 };
 
-typedef void (JabberPresenceHandler)(JabberStream *js,
-                                     JabberPresence *presence,
-                                     PurpleXmlNode *child);
-
 static JabberPresenceType
 str_to_presence_type(const char *type)
 {
@@ -451,7 +447,7 @@ typedef struct {
 } JabberPresenceCapabilities;
 
 static void
-jabber_presence_set_capabilities(JabberCapsClientInfo *info,
+jabber_presence_set_capabilities(JabberCapsClientInfo *info, GList *exts,
                                  JabberPresenceCapabilities *userdata)
 {
 	JabberBuddyResource *jbr;
@@ -464,10 +460,15 @@ jabber_presence_set_capabilities(JabberCapsClientInfo *info,
 	if (!jbr) {
 		g_free(userdata->from);
 		g_free(userdata);
+		g_list_free_full(exts, g_free);
 		return;
 	}
 
-	jbr->caps = info;
+	/* Any old jbr->caps.info is owned by the caps code */
+	g_list_free_full(jbr->caps.exts, g_free);
+
+	jbr->caps.info = info;
+	jbr->caps.exts = exts;
 
 	purple_protocol_got_media_caps(
 			purple_connection_get_account(userdata->js->gc),
@@ -1032,27 +1033,30 @@ void jabber_presence_parse(JabberStream *js, PurpleXmlNode *packet)
 		const char *node = purple_xmlnode_get_attrib(presence.caps, "node");
 		const char *ver  = purple_xmlnode_get_attrib(presence.caps, "ver");
 		const char *hash = purple_xmlnode_get_attrib(presence.caps, "hash");
+		const char *ext  = purple_xmlnode_get_attrib(presence.caps, "ext");
 
-		/* v1.5 uses: node, ver, and hash. */
-		if(node != NULL && *node != '\0' &&
-		   ver != NULL && *ver != '\0' &&
-		   hash != NULL && *hash != '\0')
-		{
+		/* v1.3 uses: node, ver, and optionally ext.
+		 * v1.5 uses: node, ver, and hash. */
+		if (node && *node && ver && *ver) {
+			gchar **exts = ext && *ext ? g_strsplit(ext, " ", -1) : NULL;
 			jbr = jabber_buddy_find_resource(presence.jb, presence.jid_from->resource);
 
 			/* Look it up if we don't already have all this information */
-			if(jbr == NULL || jbr->caps == NULL ||
-			   !purple_strequal(node, jbr->caps->tuple.node) ||
-			   !purple_strequal(ver, jbr->caps->tuple.ver) ||
-			   !purple_strequal(hash, jbr->caps->tuple.hash))
-			{
+			if (!jbr || !jbr->caps.info ||
+					!purple_strequal(node, jbr->caps.info->tuple.node) ||
+					!purple_strequal(ver, jbr->caps.info->tuple.ver) ||
+					!purple_strequal(hash, jbr->caps.info->tuple.hash) ||
+					!jabber_caps_exts_known(jbr->caps.info, (gchar **)exts)) {
 				JabberPresenceCapabilities *userdata = g_new0(JabberPresenceCapabilities, 1);
 				userdata->js = js;
 				userdata->jb = presence.jb;
 				userdata->from = g_strdup(presence.from);
-				jabber_caps_get_info(js, presence.from, node, ver, hash,
+				jabber_caps_get_info(js, presence.from, node, ver, hash, exts,
 				    (jabber_caps_get_info_cb)jabber_presence_set_capabilities,
 				    userdata);
+			} else {
+				if (exts)
+					g_strfreev(exts);
 			}
 		}
 	}
@@ -1242,9 +1246,8 @@ parse_muc_user(JabberStream *js, JabberPresence *presence, PurpleXmlNode *x)
 	presence->chat_info.item = purple_xmlnode_get_child(x, "item");
 }
 
-static void
-jabber_presence_register_handler(const char *node, const char *xmlns,
-                                 JabberPresenceHandler *handler)
+void jabber_presence_register_handler(const char *node, const char *xmlns,
+                                      JabberPresenceHandler *handler)
 {
 	/*
 	 * This is valid because nodes nor namespaces cannot have spaces in them

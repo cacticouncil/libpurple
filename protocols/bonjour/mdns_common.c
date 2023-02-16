@@ -39,8 +39,7 @@ mdns_retrieve_buddy_icon_func *_mdns_retrieve_buddy_icon = NULL;
 /**
  * Allocate space for the dns-sd data.
  */
-BonjourDnsSd *
-bonjour_dns_sd_new(void) {
+BonjourDnsSd * bonjour_dns_sd_new() {
 	BonjourDnsSd *data = g_new0(BonjourDnsSd, 1);
 	return data;
 }

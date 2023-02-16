@@ -224,7 +224,7 @@ static void jabber_iq_version_parse(JabberStream *js, const char *from,
 	PurpleXmlNode *query;
 
 	if(type == JABBER_IQ_GET) {
-		PurpleUi *ui;
+		PurpleUiInfo *ui_info;
 		const char *ui_name = NULL, *ui_version = NULL;
 
 		iq = jabber_iq_new_query(js, JABBER_IQ_RESULT, "jabber:iq:version");
@@ -234,11 +234,11 @@ static void jabber_iq_version_parse(JabberStream *js, const char *from,
 
 		query = purple_xmlnode_get_child(iq->node, "query");
 
-		ui = purple_core_get_ui();
+		ui_info = purple_core_get_ui_info();
 
-		if(PURPLE_IS_UI(ui)) {
-			ui_name = purple_ui_get_name(ui);
-			ui_version = purple_ui_get_version(ui);
+		if(PURPLE_IS_UI_INFO(ui_info)) {
+			ui_name = purple_ui_info_get_name(ui_info);
+			ui_version = purple_ui_info_get_version(ui_info);
 		}
 
 		if(NULL != ui_name && NULL != ui_version) {

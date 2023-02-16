@@ -112,7 +112,6 @@ test_purple_person_contacts_single(void) {
 	PurpleAccount *account = NULL;
 	PurpleContact *contact = NULL;
 	PurplePerson *person = NULL;
-	PurplePerson *person1 = NULL;
 	guint n_items = 0;
 	gboolean removed = FALSE;
 	gboolean changed = FALSE;
@@ -130,9 +129,6 @@ test_purple_person_contacts_single(void) {
 	g_assert_cmpuint(n_items, ==, 1);
 	g_assert_true(changed);
 
-	person1 = purple_contact_get_person(contact);
-	g_assert_true(person1 == person);
-
 	changed = FALSE;
 
 	removed = purple_person_remove_contact(person, contact);
@@ -141,12 +137,8 @@ test_purple_person_contacts_single(void) {
 	g_assert_cmpuint(n_items, ==, 0);
 	g_assert_true(changed);
 
-	person1 = purple_contact_get_person(contact);
-	g_assert_null(person1);
-
 	g_clear_object(&person);
 	g_clear_object(&account);
-	g_clear_object(&contact);
 }
 
 static void
@@ -236,17 +228,18 @@ test_purple_person_priority_single(void) {
 	priority = purple_person_get_priority_contact(person);
 	g_assert_null(priority);
 
-	/* Now create a real contact. */
-	contact = purple_contact_new(account, "username");
-	purple_person_add_contact(person, contact);
-
-	/* Set the status of the contact. */
-	presence = purple_contact_get_presence(contact);
+	/* Build the presence and status for the contact. */
+	presence = g_object_new(PURPLE_TYPE_PRESENCE, NULL);
 	status_type = purple_status_type_new(PURPLE_STATUS_AVAILABLE, "available",
 	                                     "Available", FALSE);
 	status = purple_status_new(status_type, presence);
 	g_object_set(G_OBJECT(presence), "active-status", status, NULL);
 	g_clear_object(&status);
+
+	/* Now create a real contact. */
+	contact = purple_contact_new(account, "username");
+	purple_contact_set_presence(contact, presence);
+	purple_person_add_contact(person, contact);
 
 	g_assert_true(called);
 
@@ -308,16 +301,17 @@ test_purple_person_priority_multiple_with_change(void) {
 		/* Set changed to false as it shouldn't be changed. */
 		changed = FALSE;
 
+		/* Build the presence and status for the contact. */
+		presence = g_object_new(PURPLE_TYPE_PRESENCE, NULL);
+		status = purple_status_new(offline, presence);
+		g_object_set(G_OBJECT(presence), "active-status", status, NULL);
+		g_clear_object(&status);
+
 		/* Now create a real contact. */
 		username = g_strdup_printf("username%d", i + 1);
 		contact = purple_contact_new(account, username);
 		g_free(username);
-
-		/* Set the status for the contact. */
-		presence = purple_contact_get_presence(contact);
-		status = purple_status_new(offline, presence);
-		g_object_set(G_OBJECT(presence), "active-status", status, NULL);
-		g_clear_object(&status);
+		purple_contact_set_presence(contact, presence);
 
 		purple_person_add_contact(person, contact);
 
@@ -334,6 +328,7 @@ test_purple_person_priority_multiple_with_change(void) {
 		}
 
 		g_clear_object(&contact);
+		g_clear_object(&presence);
 	}
 
 	n_items = g_list_model_get_n_items(G_LIST_MODEL(person));

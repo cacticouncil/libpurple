@@ -1,12 +1,5 @@
 IRCV3_SOURCES = [
-	'purpleircv3connection.c',
-	'purpleircv3connection.h',
 	'purpleircv3core.c',
-	'purpleircv3core.h',
-	'purpleircv3messagehandlers.c',
-	'purpleircv3messagehandlers.h',
-	'purpleircv3parser.c',
-	'purpleircv3parser.h',
 	'purpleircv3protocol.c',
 	'purpleircv3protocol.h',
 ]
@@ -24,6 +17,4 @@ if DYNAMIC_IRCV3
 	    install : true, install_dir : PURPLE_PLUGINDIR)
 
 	devenv.append('PURPLE_PLUGIN_PATH', meson.current_build_dir())
-
-	subdir('tests')
 endif

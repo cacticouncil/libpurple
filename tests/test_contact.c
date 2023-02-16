@@ -47,6 +47,7 @@ test_purple_contact_properties(void) {
 	PurpleContact *contact = NULL;
 	PurplePerson *person = NULL;
 	PurplePerson *person1 = NULL;
+	PurplePresence *presence = NULL;
 	PurplePresence *presence1 = NULL;
 	PurpleTags *tags = NULL;
 	GdkPixbuf *avatar = NULL;
@@ -58,6 +59,7 @@ test_purple_contact_properties(void) {
 
 	account = purple_account_new("test", "test");
 	avatar = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 1, 1);
+	presence = g_object_new(PURPLE_TYPE_PRESENCE, NULL);
 	person = purple_person_new();
 
 	/* Use g_object_new so we can test setting properties by name. All of them
@@ -72,6 +74,7 @@ test_purple_contact_properties(void) {
 		"display-name", "display-name",
 		"alias", "alias",
 		"avatar", avatar,
+		"presence", presence,
 		"person", person,
 		NULL);
 
@@ -95,7 +98,7 @@ test_purple_contact_properties(void) {
 	g_assert_cmpstr(display_name, ==, "display-name");
 	g_assert_cmpstr(alias, ==, "alias");
 	g_assert_true(avatar1 == avatar);
-	g_assert_nonnull(presence1);
+	g_assert_true(presence1 == presence);
 	g_assert_nonnull(tags);
 	g_assert_true(person1 == person);
 
@@ -111,6 +114,7 @@ test_purple_contact_properties(void) {
 	g_clear_object(&person);
 	g_clear_object(&person1);
 
+	g_clear_object(&presence);
 	g_clear_object(&avatar);
 	g_clear_object(&contact);
 	g_clear_object(&account);

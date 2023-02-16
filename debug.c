@@ -140,7 +140,7 @@ purple_debug_fatal(const gchar *category, const gchar *format, ...) {
 }
 
 gboolean
-purple_debug_is_verbose(void) {
+purple_debug_is_verbose() {
 	return debug_verbose;
 }
 
@@ -150,7 +150,7 @@ purple_debug_set_verbose(gboolean verbose) {
 }
 
 gboolean
-purple_debug_is_unsafe(void) {
+purple_debug_is_unsafe() {
 	return debug_unsafe;
 }
 

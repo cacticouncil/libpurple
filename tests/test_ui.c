@@ -25,10 +25,6 @@
 
 #include <glib.h>
 #include <glib/gprintf.h>
-#include <glib/gi18n-lib.h>
-
-#define G_SETTINGS_ENABLE_BACKEND
-#include <gio/gsettingsbackend.h>
 
 #include <signal.h>
 #include <string.h>
@@ -59,53 +55,15 @@ static PurpleConversationUiOps test_conv_uiops = {
 	.write_conv = test_write_conv
 };
 
-/******************************************************************************
- * PurpleUi Implementation
- *****************************************************************************/
-struct _TestPurpleUi {
-	PurpleUi parent;
-};
-
-G_DECLARE_FINAL_TYPE(TestPurpleUi, test_purple_ui, TEST_PURPLE, UI, PurpleUi)
-
-G_DEFINE_TYPE(TestPurpleUi, test_purple_ui, PURPLE_TYPE_UI)
-
-static gboolean
-test_purple_ui_start(G_GNUC_UNUSED PurpleUi *ui, G_GNUC_UNUSED GError **error) {
+static void
+test_ui_init(void)
+{
 	purple_conversations_set_ui_ops(&test_conv_uiops);
-
-	return TRUE;
 }
 
-static gpointer
-test_purple_ui_get_settings_backend(G_GNUC_UNUSED PurpleUi *ui) {
-	return g_memory_settings_backend_new();
-}
-
-static void
-test_purple_ui_init(G_GNUC_UNUSED TestPurpleUi *ui) {
-}
-
-static void
-test_purple_ui_class_init(TestPurpleUiClass *klass) {
-	PurpleUiClass *ui_class = PURPLE_UI_CLASS(klass);
-
-	ui_class->start = test_purple_ui_start;
-	ui_class->get_settings_backend = test_purple_ui_get_settings_backend;
-}
-
-static PurpleUi *
-test_purple_ui_new(void) {
-	return g_object_new(
-		test_purple_ui_get_type(),
-		"id", "test",
-		"name", "Test-UI",
-		"version", VERSION,
-		"website", PURPLE_WEBSITE,
-		"support-website", PURPLE_WEBSITE,
-		"client-type", "test",
-		NULL);
-}
+static PurpleCoreUiOps test_core_uiops = {
+	.ui_init = test_ui_init
+};
 
 static gboolean
 test_ui_init_history(GError **error) {
@@ -134,7 +92,7 @@ test_ui_init_history(GError **error) {
 
 void
 test_ui_purple_init(void) {
-	PurpleUi *ui = NULL;
+	PurpleUiInfo *ui_info = NULL;
 	GError *error = NULL;
 
 #ifndef _WIN32
@@ -149,18 +107,25 @@ test_ui_purple_init(void) {
 	/* set the magic PURPLE_PLUGINS_SKIP environment variable */
 	g_setenv("PURPLE_PLUGINS_SKIP", "1", TRUE);
 
-	ui = test_purple_ui_new();
+	/* Set the core-uiops, which is used to
+	 * 	- initialize the ui specific preferences.
+	 * 	- initialize the debug ui.
+	 * 	- initialize the ui components for all the modules.
+	 * 	- uninitialize the ui components for all the modules when the core terminates.
+	 */
+	purple_core_set_ui_ops(&test_core_uiops);
+
+	ui_info = purple_ui_info_new("test", "Test-UI", VERSION, PURPLE_WEBSITE,
+	                             PURPLE_WEBSITE, "test");
 
 	/* Now that all the essential stuff has been set, let's try to init the core. It's
 	 * necessary to provide a non-NULL name for the current ui to the core. This name
 	 * is used by stuff that depends on this ui, for example the ui-specific plugins. */
-	if (!purple_core_init(ui, &error)) {
+	if (!purple_core_init(ui_info)) {
 		/* Initializing the core failed. Terminate. */
 		fprintf(stderr,
-		        _("Initialization of the libpurple core failed. %s\n"
-		          "Aborting!\nPlease report this!\n"),
-		        (error != NULL) ? error->message : "unknown error");
-		g_clear_error(&error);
+				"libpurple initialization failed. Dumping core.\n"
+				"Please report this!\n");
 		abort();
 	}
 

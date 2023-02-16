@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Pidgin - Internet Messenger
+Copyright (C) Pidgin Developers <devel@pidgin.im>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this library; if not, see <https://www.gnu.org/licenses/>.
+-->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="Adw" version="1.0"/>
+  <requires lib="pidgin" version="3.0"/>
+  <!-- interface-license-type gplv2 -->
+  <!-- interface-name Pidgin -->
+  <!-- interface-description Internet Messenger -->
+  <!-- interface-copyright Pidgin Developers <devel@pidgin.im> -->
+  <object class="GtkTreeStore" id="model">
+    <columns>
+      <!-- column-name conversation -->
+      <column type="GObject"/>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+      <!-- column-name icon -->
+      <column type="GdkPixbuf"/>
+      <!-- column-name markup -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <template class="PidginDisplayWindow" parent="GtkApplicationWindow">
+    <property name="show-menubar">1</property>
+    <property name="default-height">450</property>
+    <property name="default-width">950</property>
+    <child>
+      <object class="GtkEventControllerKey">
+        <property name="propagation-phase">capture</property>
+        <signal name="key-pressed" handler="pidgin_display_window_key_pressed_cb"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox" id="vbox">
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkPaned" id="paned">
+            <property name="vexpand">1</property>
+            <property name="focusable">1</property>
+            <property name="position">220</property>
+            <child>
+              <object class="GtkBox">
+                <property name="margin-top">6</property>
+                <property name="margin-start">6</property>
+                <property name="margin-end">6</property>
+                <property name="margin-bottom">6</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">6</property>
+                <child>
+                  <object class="PidginStatusBox"/>
+                </child>
+                <child>
+                  <object class="GtkScrolledWindow">
+                    <property name="vexpand">1</property>
+                    <property name="focusable">1</property>
+                    <property name="propagate-natural-width">1</property>
+                    <property name="child">
+                      <object class="GtkTreeView" id="view">
+                        <property name="focusable">1</property>
+                        <property name="model">model</property>
+                        <property name="headers-visible">0</property>
+                        <property name="search-column">3</property>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection" id="selection">
+                            <property name="mode">browse</property>
+                            <signal name="changed" handler="pidgin_display_window_selection_changed" object="PidginDisplayWindow" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkTreeViewColumn" id="markup">
+                            <child>
+                              <object class="GtkCellRendererPixbuf" id="icon"/>
+                              <attributes>
+                                <attribute name="pixbuf">2</attribute>
+                              </attributes>
+                            </child>
+                            <child>
+                              <object class="GtkCellRendererText" id="name"/>
+                              <attributes>
+                                <attribute name="markup">3</attribute>
+                              </attributes>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="AdwViewStack" id="stack">
+                <child>
+                  <object class="AdwViewStackPage">
+                    <property name="name">__notifications__</property>
+                    <property name="child">
+                      <object class="GtkScrolledWindow">
+                        <child>
+                          <object class="PidginNotificationList" id="notification_list">
+                            <property name="orientation">vertical</property>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwViewStackPage">
+                    <property name="name">__conversations__</property>
+                    <property name="child">
+                      <object class="AdwStatusPage">
+                        <property name="icon-name">mail-send-symbolic</property>
+                        <property name="title" translatable="1">Conversations</property>
+                        <property name="description" translatable="1">When you send a message to a friend or join a chat it will show up here!</property>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

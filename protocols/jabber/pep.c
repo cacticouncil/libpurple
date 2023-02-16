@@ -54,15 +54,9 @@ void jabber_pep_uninit(void) {
 	pep_handlers = NULL;
 }
 
-void
-jabber_pep_add_action_entries(GSimpleActionGroup *group) {
-	jabber_nick_add_action_entries(group);
-}
-
-void
-jabber_pep_append_menu(GMenu *menu) {
+void jabber_pep_init_actions(GList **m) {
 	/* register the PEP-specific actions */
-	jabber_nick_append_menu(menu);
+	jabber_nick_init_action(m);
 }
 
 void jabber_pep_register_handler(const char *xmlns, JabberPEPHandler handlerfunc) {
@@ -140,6 +134,25 @@ void jabber_handle_event(JabberMessage *jm) {
 
 	/* discard items we don't have a handler for */
 	g_free(jid);
+}
+
+void jabber_pep_delete_node(JabberStream *js, const gchar *node)
+{
+	JabberIq *iq;
+	PurpleXmlNode *pubsub, *del;
+
+	g_return_if_fail(node != NULL);
+	g_return_if_fail(js->pep);
+
+	iq = jabber_iq_new(js, JABBER_IQ_SET);
+
+	pubsub = purple_xmlnode_new_child(iq->node, "pubsub");
+	purple_xmlnode_set_namespace(pubsub, "http://jabber.org/protocol/pubsub#owner");
+
+	del = purple_xmlnode_new_child(pubsub, "delete");
+	purple_xmlnode_set_attrib(del, "node", node);
+
+	jabber_iq_send(iq);
 }
 
 void jabber_pep_publish(JabberStream *js, PurpleXmlNode *publish) {

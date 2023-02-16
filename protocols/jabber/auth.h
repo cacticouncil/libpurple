@@ -59,6 +59,9 @@ JabberSaslMech **jabber_auth_get_scram_mechs(gint *count);
 JabberSaslMech *jabber_auth_get_cyrus_mech(void);
 JabberSaslMech *jabber_auth_get_webex_token_mech(void);
 
+void jabber_auth_add_mech(JabberSaslMech *);
+void jabber_auth_remove_mech(JabberSaslMech *);
+
 void jabber_auth_init(void);
 void jabber_auth_uninit(void);
 

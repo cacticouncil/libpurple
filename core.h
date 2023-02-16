@@ -29,7 +29,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
-#include <libpurple/purpleui.h>
+#include <libpurple/purplecoreuiops.h>
 
 typedef struct PurpleCore PurpleCore;
 
@@ -37,14 +37,15 @@ G_BEGIN_DECLS
 
 /**
  * purple_core_init:
- * @ui: (transfer full): The [class@Purple.Ui] of the UI using the core.
- * @error: (optional) (nullable): A return address for a [type@GLib.GError].
+ * @ui_info: (transfer full): The [class@UiInfo] of the UI using the core.
  *
  * Initializes the core of purple.
  *
- * Returns: %TRUE if successful, otherwise %FALSE with @error potentially set.
+ * This will setup preferences for all the core subsystems.
+ *
+ * Returns: %TRUE if successful, or %FALSE otherwise.
  */
-gboolean purple_core_init(PurpleUi *ui, GError **error);
+gboolean purple_core_init(PurpleUiInfo *ui_info);
 
 /**
  * purple_core_quit:
@@ -111,13 +112,30 @@ PurpleCore *purple_get_core(void);
 gpointer purple_core_get_settings_backend(void);
 
 /**
- * purple_core_get_ui:
+ * purple_core_set_ui_ops:
+ * @ops: A UI ops structure for the core.
  *
- * Gets the [class@Purple.Ui] that is running.
- *
- * Returns: (transfer none): The ui.
+ * Sets the UI ops for the core.
  */
-PurpleUi *purple_core_get_ui(void);
+void purple_core_set_ui_ops(PurpleCoreUiOps *ops);
+
+/**
+ * purple_core_get_ui_ops:
+ *
+ * Returns the UI ops for the core.
+ *
+ * Returns: The core's UI ops structure.
+ */
+PurpleCoreUiOps *purple_core_get_ui_ops(void);
+
+/**
+ * purple_core_get_ui_info:
+ *
+ * Returns a #PurpleUiInfo that contains information about the user interface.
+ *
+ * Returns: (transfer none): A #PurpleUiInfo instance.
+ */
+PurpleUiInfo *purple_core_get_ui_info(void);
 
 G_END_DECLS
 

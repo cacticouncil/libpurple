@@ -114,7 +114,7 @@ _login_resp_cb(NMUser * user, NMERR_T ret_code,
 		}
 
 		/* Tell Purple that we are connected */
-		purple_connection_set_state(gc, PURPLE_CONNECTION_STATE_CONNECTED);
+		purple_connection_set_state(gc, PURPLE_CONNECTION_CONNECTED);
 
 		_sync_contact_list(user);
 
@@ -1914,8 +1914,7 @@ _evt_conference_invite(NMUser * user, NMEvent * event)
 	const char *secondary = NULL;
 	const char *name = NULL;
 	char *primary = NULL;
-	GDateTime *gmt = NULL;
-	gchar *gmt_str = NULL;
+	time_t gmt;
 
 	ur = nm_find_user_record(user, nm_event_get_source(event));
 	if (ur)
@@ -1924,11 +1923,10 @@ _evt_conference_invite(NMUser * user, NMEvent * event)
 	if (name == NULL)
 		name = nm_event_get_source(event);
 
-	gmt = g_date_time_new_from_unix_local(nm_event_get_gmt(event));
-	gmt_str = g_date_time_format(gmt, "%c");
+	gmt = nm_event_get_gmt(event);
 	title = _("Invitation to Conversation");
 	primary = g_strdup_printf(_("Invitation from: %s\n\nSent: %s"),
-	                          name, gmt_str);
+							  name, purple_date_format_full(localtime(&gmt)));
 	secondary = _("Would you like to join the conversation?");
 
 	/* Set up params list for the callbacks
@@ -1949,8 +1947,6 @@ _evt_conference_invite(NMUser * user, NMEvent * event)
 						_("Yes"), G_CALLBACK(_join_conference_cb),
 						_("No"), G_CALLBACK(_reject_conference_cb));
 
-	g_free(gmt_str);
-	g_date_time_unref(gmt);
 	g_free(primary);
 }
 
@@ -2185,7 +2181,8 @@ _event_callback(NMUser * user, NMEvent * event)
  ******************************************************************************/
 
 static void
-novell_login(G_GNUC_UNUSED PurpleProtocol *protocol, PurpleAccount *account) {
+novell_login(PurpleAccount * account)
+{
 	PurpleConnection *gc;
 	NMUser *user = NULL;
 	const char *server;
@@ -2240,7 +2237,8 @@ novell_login(G_GNUC_UNUSED PurpleProtocol *protocol, PurpleAccount *account) {
 }
 
 static void
-novell_close(G_GNUC_UNUSED PurpleProtocol *protocol, PurpleConnection * gc) {
+novell_close(PurpleConnection * gc)
+{
 	NMUser *user;
 	NMConn *conn;
 
@@ -3007,8 +3005,7 @@ novell_status_text(PurpleProtocolClient *client, PurpleBuddy * buddy)
 }
 
 static GList *
-novell_status_types(G_GNUC_UNUSED PurpleProtocol *protocol,
-                    PurpleAccount *account)
+novell_status_types(PurpleAccount *account)
 {
 	GList *status_types = NULL;
 	PurpleStatusType *type;

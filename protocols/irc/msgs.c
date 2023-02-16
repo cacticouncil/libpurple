@@ -93,7 +93,7 @@ static void irc_connected(struct irc_conn *irc, const char *nick)
 		return;
 
 	purple_connection_set_display_name(gc, nick);
-	purple_connection_set_state(gc, PURPLE_CONNECTION_STATE_CONNECTED);
+	purple_connection_set_state(gc, PURPLE_CONNECTION_CONNECTED);
 	account = purple_connection_get_account(gc);
 
 	/* If we're away then set our away message */
@@ -450,19 +450,11 @@ void irc_msg_endwhois(struct irc_conn *irc, const char *name, const char *from, 
 		g_string_free(irc->whois.channels, TRUE);
 	}
 	if (irc->whois.idle) {
-		GDateTime *signon = NULL;
-
-		tmp = purple_str_seconds_to_string(irc->whois.idle);
-		purple_notify_user_info_add_pair_plaintext(user_info, _("Idle for"),
-		                                           tmp);
-		g_free(tmp);
-
-		signon = g_date_time_new_from_unix_local(irc->whois.signon);
-		tmp = g_date_time_format(signon, "%c");
+		gchar *timex = purple_str_seconds_to_string(irc->whois.idle);
+		purple_notify_user_info_add_pair_plaintext(user_info, _("Idle for"), timex);
+		g_free(timex);
 		purple_notify_user_info_add_pair_plaintext(user_info,
-		                                           _("Online since"), tmp);
-		g_free(tmp);
-		g_date_time_unref(signon);
+														_("Online since"), purple_date_format_full(localtime(&irc->whois.signon)));
 	}
 	if (purple_strequal(irc->whois.nick, "elb")) {
 		purple_notify_user_info_add_pair_plaintext(user_info,
@@ -1186,7 +1178,7 @@ void irc_msg_nick(struct irc_conn *irc, const char *name, const char *from, char
 void irc_msg_badnick(struct irc_conn *irc, const char *name, const char *from, char **args)
 {
 	PurpleConnection *gc = purple_account_get_connection(irc->account);
-	if (purple_connection_get_state(gc) == PURPLE_CONNECTION_STATE_CONNECTED) {
+	if (purple_connection_get_state(gc) == PURPLE_CONNECTION_CONNECTED) {
 		purple_notify_error(gc, _("Invalid nickname"), _("Invalid "
 			"nickname"), _("Your selected nickname was rejected by "
 			"the server.  It probably contains invalid characters."),
@@ -1205,7 +1197,7 @@ void irc_msg_nickused(struct irc_conn *irc, const char *name, const char *from, 
 	char *newnick, *buf, *end;
 	PurpleConnection *gc = purple_account_get_connection(irc->account);
 
-	if (gc && purple_connection_get_state(gc) == PURPLE_CONNECTION_STATE_CONNECTED) {
+	if (gc && purple_connection_get_state(gc) == PURPLE_CONNECTION_CONNECTED) {
 		/* We only want to do the following dance if the connection
 		   has not been successfully completed.  If it has, just
 		   notify the user that their /nick command didn't go. */
@@ -1392,8 +1384,8 @@ static void irc_msg_handle_privmsg(struct irc_conn *irc, const char *name, const
 			purple_serv_got_chat_in(gc, purple_chat_conversation_get_id(PURPLE_CHAT_CONVERSATION(chat)),
 				nick, PURPLE_MESSAGE_RECV, msg, time(NULL));
 		} else
-			purple_debug_info("irc", "Got a %s on %s, which does not exist\n",
-			                  notice ? "NOTICE" : "PRIVMSG", to);
+			purple_debug_error("irc", "Got a %s on %s, which does not exist\n",
+			                   notice ? "NOTICE" : "PRIVMSG", to);
 	}
 	g_free(msg);
 	g_free(nick);

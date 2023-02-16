@@ -159,7 +159,7 @@ test_purple_history_manager_registration(void) {
 	GError *error = NULL;
 	gboolean r = FALSE;
 
-	manager = g_object_new(PURPLE_TYPE_HISTORY_MANAGER, NULL);
+	manager = purple_history_manager_get_default();
 	g_assert_true(PURPLE_IS_HISTORY_MANAGER(manager));
 
 	adapter = test_purple_history_adapter_new();
@@ -188,7 +188,6 @@ test_purple_history_manager_registration(void) {
 
 	/* Final clean ups. */
 	g_clear_object(&adapter);
-	g_clear_object(&manager);
 }
 
 /******************************************************************************
@@ -200,13 +199,11 @@ test_purple_history_manager_set_active_null(void) {
 	GError *error = NULL;
 	gboolean ret = FALSE;
 
-	manager = g_object_new(PURPLE_TYPE_HISTORY_MANAGER, NULL);
+	manager = purple_history_manager_get_default();
 	ret = purple_history_manager_set_active(manager, NULL, &error);
 
 	g_assert_no_error(error);
 	g_assert_true(ret);
-
-	g_clear_object(&manager);
 }
 
 static void
@@ -215,14 +212,12 @@ test_purple_history_manager_set_active_non_existent(void) {
 	GError *error = NULL;
 	gboolean ret = FALSE;
 
-	manager = g_object_new(PURPLE_TYPE_HISTORY_MANAGER, NULL);
+	manager = purple_history_manager_get_default();
 	ret = purple_history_manager_set_active(manager, "foo", &error);
 
 	g_assert_error(error, PURPLE_HISTORY_MANAGER_DOMAIN, 0);
 	g_assert_false(ret);
 	g_clear_error(&error);
-
-	g_clear_object(&manager);
 }
 
 static void
@@ -233,7 +228,7 @@ test_purple_history_manager_set_active_normal(void) {
 	gboolean r = FALSE;
 	TestPurpleHistoryAdapter *ta = NULL;
 
-	manager = g_object_new(PURPLE_TYPE_HISTORY_MANAGER, NULL);
+	manager = purple_history_manager_get_default();
 
 	/* Create the adapter and register it in the manager. */
 	adapter = test_purple_history_adapter_new();
@@ -269,7 +264,6 @@ test_purple_history_manager_set_active_normal(void) {
 
 	/* And our final cleanup. */
 	g_clear_object(&adapter);
-	g_clear_object(&manager);
 }
 
 /******************************************************************************
@@ -281,15 +275,13 @@ test_purple_history_manager_no_adapter_query(void) {
 	GList *list = NULL;
 	GError *error = NULL;
 
-	manager = g_object_new(PURPLE_TYPE_HISTORY_MANAGER, NULL);
+	manager = purple_history_manager_get_default();
 	list = purple_history_manager_query(manager, "", &error);
 
 	g_assert_error(error, PURPLE_HISTORY_MANAGER_DOMAIN, 0);
 	g_clear_error(&error);
 
 	g_assert_null(list);
-
-	g_clear_object(&manager);
 }
 
 static void
@@ -298,15 +290,13 @@ test_purple_history_manager_no_adapter_remove(void) {
 	GError *error = NULL;
 	gboolean result = FALSE;
 
-	manager = g_object_new(PURPLE_TYPE_HISTORY_MANAGER, NULL);
+	manager = purple_history_manager_get_default();
 	result = purple_history_manager_remove(manager, "", &error);
 
 	g_assert_error(error, PURPLE_HISTORY_MANAGER_DOMAIN, 0);
 	g_clear_error(&error);
 
 	g_assert_false(result);
-
-	g_clear_object(&manager);
 }
 
 static void
@@ -318,7 +308,7 @@ test_purple_history_manager_no_adapter_write(void) {
 	GError *error = NULL;
 	gboolean result = FALSE;
 
-	manager = g_object_new(PURPLE_TYPE_HISTORY_MANAGER, NULL);
+	manager = purple_history_manager_get_default();
 
 	message = g_object_new(PURPLE_TYPE_MESSAGE, NULL);
 	account = purple_account_new("test", "test");
@@ -340,7 +330,6 @@ test_purple_history_manager_no_adapter_write(void) {
 
 	g_clear_object(&message);
 	g_clear_object(&conversation);
-	g_clear_object(&manager);
 }
 
 /******************************************************************************
@@ -348,16 +337,12 @@ test_purple_history_manager_no_adapter_write(void) {
  *****************************************************************************/
 static void
 test_purple_history_manager_adapter_query(void) {
-	PurpleHistoryManager *manager = NULL;
-	PurpleHistoryAdapter *adapter = NULL;
-	TestPurpleHistoryAdapter *ta = NULL;
+	PurpleHistoryManager *manager = purple_history_manager_get_default();
+	PurpleHistoryAdapter *adapter = test_purple_history_adapter_new();
+	TestPurpleHistoryAdapter *ta = TEST_PURPLE_HISTORY_ADAPTER(adapter);
 	GList *list = NULL;
 	GError *error = NULL;
 	gboolean result = FALSE;
-
-	manager = g_object_new(PURPLE_TYPE_HISTORY_MANAGER, NULL);
-	adapter = test_purple_history_adapter_new();
-	ta = TEST_PURPLE_HISTORY_ADAPTER(adapter);
 
 	result = purple_history_manager_register(manager, adapter, &error);
 	g_assert_no_error(error);
@@ -382,20 +367,15 @@ test_purple_history_manager_adapter_query(void) {
 	g_assert_true(result);
 
 	g_clear_object(&adapter);
-	g_clear_object(&manager);
 }
 
 static void
 test_purple_history_manager_adapter_remove(void) {
-	PurpleHistoryManager *manager = NULL;
-	PurpleHistoryAdapter *adapter = NULL;
-	TestPurpleHistoryAdapter *ta = NULL;
+	PurpleHistoryManager *manager = purple_history_manager_get_default();
+	PurpleHistoryAdapter *adapter = test_purple_history_adapter_new();
+	TestPurpleHistoryAdapter *ta = TEST_PURPLE_HISTORY_ADAPTER(adapter);
 	GError *error = NULL;
 	gboolean result = FALSE;
-
-	manager = g_object_new(PURPLE_TYPE_HISTORY_MANAGER, NULL);
-	adapter = test_purple_history_adapter_new();
-	ta = TEST_PURPLE_HISTORY_ADAPTER(adapter);
 
 	result = purple_history_manager_register(manager, adapter, &error);
 	g_assert_no_error(error);
@@ -420,23 +400,18 @@ test_purple_history_manager_adapter_remove(void) {
 	g_assert_true(result);
 
 	g_clear_object(&adapter);
-	g_clear_object(&manager);
 }
 
 static void
 test_purple_history_manager_adapter_write(void) {
 	PurpleAccount *account = NULL;
 	PurpleConversation *conversation = NULL;
-	PurpleHistoryManager *manager = NULL;
-	PurpleHistoryAdapter *adapter = NULL;
+	PurpleHistoryManager *manager = purple_history_manager_get_default();
+	PurpleHistoryAdapter *adapter = test_purple_history_adapter_new();
 	PurpleMessage *message = NULL;
-	TestPurpleHistoryAdapter *ta = NULL;
+	TestPurpleHistoryAdapter *ta = TEST_PURPLE_HISTORY_ADAPTER(adapter);
 	GError *error = NULL;
 	gboolean result = FALSE;
-
-	manager = g_object_new(PURPLE_TYPE_HISTORY_MANAGER, NULL);
-	adapter = test_purple_history_adapter_new();
-	ta = TEST_PURPLE_HISTORY_ADAPTER(adapter);
 
 	result = purple_history_manager_register(manager, adapter, &error);
 	g_assert_no_error(error);
@@ -473,7 +448,6 @@ test_purple_history_manager_adapter_write(void) {
 	/* g_clear_object(&account); */
 
 	g_clear_object(&conversation);
-	g_clear_object(&manager);
 }
 
 /******************************************************************************

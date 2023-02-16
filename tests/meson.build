@@ -5,7 +5,6 @@ PROGS = [
     'circular_buffer',
     'contact',
     'contact_manager',
-    'credential_manager',
     'credential_provider',
     'history_adapter',
     'history_manager',
@@ -53,4 +52,11 @@ foreach prog : PROGS
     )
 endforeach
 
-subdir('sqlite3')
+e = executable('test_credential_manager', 'test_credential_manager.c',
+               c_args : [
+                   '-DTEST_DATA_DIR="@0@/data"'.format(meson.current_source_dir())
+               ],
+               dependencies : [libpurple_dep, glib],
+               link_with: test_ui,
+)
+test('credential_manager', e, env: testenv, is_parallel : false)

@@ -356,7 +356,7 @@ static void ggp_callback_recv(gpointer _gc, gint fd, PurpleInputCondition cond)
 			gg_debug_event(ev->type));
 	}
 
-	g_source_remove(info->inpa);
+	purple_input_remove(info->inpa);
 	info->inpa = purple_input_add(info->session->fd,
 		ggp_tcpsocket_inputcond_gg_to_purple(info->session->check),
 		ggp_callback_recv, gc);
@@ -504,7 +504,7 @@ void ggp_async_login_handler(gpointer _gc, gint fd, PurpleInputCondition cond)
 	purple_debug_info("gg", "login_handler: session: check = %d; state = %d;\n",
 			info->session->check, info->session->state);
 
-	g_source_remove(info->inpa);
+	purple_input_remove(info->inpa);
 	info->inpa = 0;
 
 	/** XXX I think that this shouldn't be done if ev->type is GG_EVENT_CONN_FAILED or GG_EVENT_CONN_SUCCESS -datallah */
@@ -526,12 +526,12 @@ void ggp_async_login_handler(gpointer _gc, gint fd, PurpleInputCondition cond)
 					info->session->connect_host);
 				ggp_servconn_add_server(info->session->
 					connect_host);
-				g_source_remove(info->inpa);
+				purple_input_remove(info->inpa);
 				info->inpa = purple_input_add(info->session->fd,
 					PURPLE_INPUT_READ,
 					ggp_callback_recv, gc);
 
-				purple_connection_set_state(gc, PURPLE_CONNECTION_STATE_CONNECTED);
+				purple_connection_set_state(gc, PURPLE_CONNECTION_CONNECTED);
 
 				ggp_buddylist_send(gc);
 				ggp_roster_request_update(gc);
@@ -539,7 +539,7 @@ void ggp_async_login_handler(gpointer _gc, gint fd, PurpleInputCondition cond)
 			break;
 		case GG_EVENT_CONN_FAILED:
 			if (info->inpa > 0) {
-				g_source_remove(info->inpa);
+				purple_input_remove(info->inpa);
 				info->inpa = 0;
 			}
 			purple_debug_info("gg", "Connection failure: %d\n",
@@ -781,8 +781,8 @@ ggp_tooltip_text(PurpleProtocolClient *client, PurpleBuddy *b,
 	}
 }
 
-static void
-ggp_login(G_GNUC_UNUSED PurpleProtocol *protocol, PurpleAccount *account) {
+static void ggp_login(PurpleAccount *account)
+{
 	PurpleConnection *gc = purple_account_get_connection(account);
 	struct gg_login_params *glp;
 	GGPInfo *info;
@@ -905,8 +905,8 @@ ggp_login(G_GNUC_UNUSED PurpleProtocol *protocol, PurpleAccount *account) {
 	}
 }
 
-static void
-ggp_close(G_GNUC_UNUSED PurpleProtocol *protocol, PurpleConnection *gc) {
+static void ggp_close(PurpleConnection *gc)
+{
 	PurpleAccount *account;
 	GGPInfo *info;;
 
@@ -934,7 +934,7 @@ ggp_close(G_GNUC_UNUSED PurpleProtocol *protocol, PurpleConnection *gc) {
 		ggp_edisc_cleanup(gc);
 
 		if (info->inpa > 0)
-			g_source_remove(info->inpa);
+			purple_input_remove(info->inpa);
 		g_free(info->imtoken);
 
 		if (info->http) {

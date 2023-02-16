@@ -83,6 +83,26 @@ void
 _purple_buddy_icons_blist_loaded_cb(void);
 
 /**
+ * _purple_connection_new:
+ * @account:  The account the connection should be connecting to.
+ * @is_registration: Whether we are registering a new account or just trying to
+ *                   do a normal signon.
+ * @password: The password to use.
+ *
+ * Creates a connection to the specified account and either connects
+ * or attempts to register a new account.  If you are logging in,
+ * the connection uses the current active status for this account.
+ * So if you want to sign on as "away," for example, you need to
+ * have called purple_account_set_status(account, "away").
+ * (And this will call purple_account_connect() automatically).
+ *
+ * Note: This function should only be called by purple_account_connect()
+ *       in account.c.  If you're trying to sign on an account, use that
+ *       function instead.
+ */
+void _purple_connection_new(PurpleAccount *account, gboolean is_registration,
+                            const gchar *password);
+/**
  * _purple_connection_new_unregister:
  * @account:  The account to unregister
  * @password: The password to use.
@@ -353,21 +373,6 @@ void purple_whiteboard_manager_startup(void);
  * Since: 3.0.0
  */
 void purple_whiteboard_manager_shutdown(void);
-
-/**
- * purple_account_set_enabled_plain:
- * @account: The instance.
- * @enabled: Whether or not the account is enabled.
- *
- * This is a temporary method until we overhaul serialization of accounts.
- *
- * This method sets the enabled state of an account without any side effects.
- * Its primary usage is when loading accounts from disk, as without this, the
- * account attempts to connect immediately.
- *
- * Since: 3.0.0
- */
-G_GNUC_INTERNAL void purple_account_set_enabled_plain(PurpleAccount *account, gboolean enabled);
 
 G_END_DECLS
 

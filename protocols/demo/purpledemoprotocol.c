@@ -36,21 +36,17 @@ struct _PurpleDemoProtocol {
  * PurpleProtocol Implementation
  *****************************************************************************/
 static void
-purple_demo_protocol_login(G_GNUC_UNUSED PurpleProtocol *protocol,
-                           PurpleAccount *account)
-{
+purple_demo_protocol_login(PurpleAccount *account) {
 	PurpleConnection *connection = NULL;
 
 	connection = purple_account_get_connection(account);
-	purple_connection_set_state(connection, PURPLE_CONNECTION_STATE_CONNECTED);
+	purple_connection_set_state(connection, PURPLE_CONNECTION_CONNECTED);
 
 	purple_demo_contacts_load(account);
 }
 
 static GList *
-purple_demo_protocol_status_types(G_GNUC_UNUSED PurpleProtocol *protocol,
-                                  PurpleAccount *account)
-{
+purple_demo_protocol_status_types(PurpleAccount *account) {
 	PurpleStatusType *type = NULL;
 	GList *status_types = NULL;
 
@@ -63,13 +59,6 @@ purple_demo_protocol_status_types(G_GNUC_UNUSED PurpleProtocol *protocol,
 
 	type = purple_status_type_new_with_attrs(
 		PURPLE_STATUS_AWAY, "away", NULL,
-		TRUE, TRUE, FALSE,
-		"message", _("Message"), purple_value_new(G_TYPE_STRING),
-		NULL);
-	status_types = g_list_append(status_types, type);
-
-	type = purple_status_type_new_with_attrs(
-		PURPLE_STATUS_EXTENDED_AWAY, "extended_away", NULL,
 		TRUE, TRUE, FALSE,
 		"message", _("Message"), purple_value_new(G_TYPE_STRING),
 		NULL);

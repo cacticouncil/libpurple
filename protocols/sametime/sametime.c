@@ -389,7 +389,7 @@ static void mw_session_io_close(struct mwSession *session) {
 
   if (pd->stream) {
     if (pd->inpa) {
-      g_source_remove(pd->inpa);
+      purple_input_remove(pd->inpa);
       pd->inpa = 0;
     }
 
@@ -1480,7 +1480,7 @@ static void mw_session_stateChange(struct mwSession *session,
   case mwSession_STARTED:
     session_started(pd);
 
-    purple_connection_set_state(gc, PURPLE_CONNECTION_STATE_CONNECTED);
+    purple_connection_set_state(gc, PURPLE_CONNECTION_CONNECTED);
     break;
 
   case mwSession_STOPPING:
@@ -1651,7 +1651,6 @@ read_cb(GObject *stream, gpointer data)
       purple_connection_error(pd->gc,
                               PURPLE_CONNECTION_ERROR_NETWORK_ERROR,
                               _("Server closed the connection"));
-	  pd->inpa = 0;
       return G_SOURCE_REMOVE;
     } else if (len < 0) {
       /* read problem occurred if we're here, so we'll need to take care of
@@ -3223,9 +3222,7 @@ mw_protocol_tooltip_text(PurpleProtocolClient *client, PurpleBuddy *b,
   }
 }
 
-static GList *
-mw_protocol_status_types(G_GNUC_UNUSED PurpleProtocol *protocol,
-                         PurpleAccount *acct)
+static GList *mw_protocol_status_types(PurpleAccount *acct)
 {
 	GList *types = NULL;
 	PurpleStatusType *type;
@@ -3523,10 +3520,10 @@ mw_protocol_chat_info_defaults(PurpleProtocolChat *protocol_chat,
 }
 
 
-static void
-mw_protocol_login(G_GNUC_UNUSED PurpleProtocol *protocol,
-                  PurpleAccount *account)
-{
+static void mw_protocol_login(PurpleAccount *acct);
+
+
+static void mw_protocol_login(PurpleAccount *account) {
   PurpleConnection *gc;
   struct mwPurpleProtocolData *pd;
 
@@ -3614,10 +3611,7 @@ mw_protocol_login(G_GNUC_UNUSED PurpleProtocol *protocol,
 }
 
 
-static void
-mw_protocol_close(G_GNUC_UNUSED PurpleProtocol *protocol,
-                  PurpleConnection *gc)
-{
+static void mw_protocol_close(PurpleConnection *gc) {
   struct mwPurpleProtocolData *pd;
 
   g_return_if_fail(gc != NULL);
@@ -3640,7 +3634,7 @@ mw_protocol_close(G_GNUC_UNUSED PurpleProtocol *protocol,
 
   /* stop watching the socket */
   if(pd->inpa) {
-    g_source_remove(pd->inpa);
+    purple_input_remove(pd->inpa);
     pd->inpa = 0;
   }
 

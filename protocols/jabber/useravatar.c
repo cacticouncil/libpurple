@@ -209,43 +209,31 @@ typedef struct {
 	JabberStream *js;
 	char *from;
 	char *id;
-	SoupMessage *msg;
 } JabberBuddyAvatarUpdateURLInfo;
 
 static void
-do_buddy_avatar_update_fromurl(GObject *source, GAsyncResult *result,
-                               gpointer data)
+do_buddy_avatar_update_fromurl(G_GNUC_UNUSED SoupSession *session,
+                               SoupMessage *msg, gpointer data)
 {
 	JabberBuddyAvatarUpdateURLInfo *info = data;
-	GBytes *response_body = NULL;
-	gpointer icon_data = NULL;
-	gsize length = 0;
-	GError *error = NULL;
-	const gchar *error_message = NULL;
+	gpointer icon_data;
 
-	if(SOUP_STATUS_IS_SUCCESSFUL(soup_message_get_status(info->msg))) {
-		response_body = soup_session_send_and_read_finish(SOUP_SESSION(source),
-		                                                  result, &error);
-		error_message = error ? error->message : "unknown";
-	} else {
-		error_message = soup_message_get_reason_phrase(info->msg);
-	}
-	if(response_body == NULL) {
+	if (!SOUP_STATUS_IS_SUCCESSFUL(soup_message_get_status(msg))) {
 		purple_debug_error("jabber",
 		                   "do_buddy_avatar_update_fromurl got error \"%s\"",
-		                   error_message);
+		                   soup_message_get_reason_phrase(msg));
 		goto out;
 	}
 
-	icon_data = g_bytes_unref_to_data(response_body, &length);
+	icon_data = g_memdup2(msg->response_body->data, msg->response_body->length);
 	purple_buddy_icons_set_for_user(purple_connection_get_account(info->js->gc),
-	                                info->from, icon_data, length, info->id);
+	                                info->from, icon_data,
+	                                msg->response_body->length, info->id);
 
 out:
 	g_free(info->from);
 	g_free(info->id);
 	g_free(info);
-	g_clear_error(&error);
 }
 
 static void
@@ -349,11 +337,10 @@ update_buddy_metadata(JabberStream *js, const char *from, PurpleXmlNode *items)
 				info->from = g_strdup(from);
 				info->id = g_strdup(id);
 
-				info->msg = msg = soup_message_new("GET", url);
-				soup_session_send_and_read_async(js->http_conns, msg,
-				                                 G_PRIORITY_DEFAULT, NULL,
-				                                 do_buddy_avatar_update_fromurl,
-				                                 info);
+				msg = soup_message_new("GET", url);
+				soup_session_queue_message(js->http_conns, msg,
+				                           do_buddy_avatar_update_fromurl,
+				                           info);
 			}
 		}
 	}

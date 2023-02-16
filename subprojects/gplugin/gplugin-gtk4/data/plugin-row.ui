@@ -1,0 +1,463 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkImage" id="image1">
+    <property name="can-focus">0</property>
+    <property name="margin-start">6</property>
+    <property name="margin-end">6</property>
+    <property name="margin-top">6</property>
+    <property name="margin-bottom">6</property>
+    <property name="icon-name">preferences-system-symbolic</property>
+  </object>
+  <template class="GPluginGtkPluginRow" parent="GtkListBoxRow">
+    <property name="child">
+      <object class="GtkBox">
+        <property name="can-focus">0</property>
+        <property name="margin-start">12</property>
+        <property name="margin-end">12</property>
+        <property name="margin-top">12</property>
+        <property name="margin-bottom">12</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">12</property>
+        <child>
+          <object class="GtkBox" id="header">
+            <property name="vexpand">1</property>
+            <property name="can-focus">0</property>
+            <property name="spacing">12</property>
+            <child>
+              <object class="GtkSwitch" id="enable">
+                <property name="valign">center</property>
+                <signal name="state-set" handler="gplugin_gtk_plugin_row_enable_state_set_cb"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox" id="title_box">
+                <property name="hexpand">1</property>
+                <property name="can-focus">0</property>
+                <property name="valign">center</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkLabel" id="title">
+                    <property name="accessible-role">row-header</property>
+                    <property name="hexpand">1</property>
+                    <property name="can-focus">0</property>
+                    <property name="label">Plugin Name</property>
+                    <property name="wrap">1</property>
+                    <property name="wrap-mode">word-char</property>
+                    <property name="xalign">0</property>
+                    <property name="yalign">0</property>
+                    <style>
+                      <class name="heading"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="summary">
+                    <property name="can-focus">0</property>
+                    <property name="halign">start</property>
+                    <property name="label">The plugin short summary</property>
+                    <property name="wrap">1</property>
+                    <property name="wrap-mode">word-char</property>
+                    <property name="ellipsize">end</property>
+                    <property name="xalign">0</property>
+                    <style>
+                      <class name="subtitle"/>
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="version">
+                <property name="can-focus">0</property>
+                <property name="halign">end</property>
+                <property name="label">1337.0.0</property>
+                <style>
+                  <class name="dim-label"/>
+                </style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="config">
+                <property name="receives-default">1</property>
+                <property name="valign">center</property>
+                <property name="child">image1</property>
+                <style>
+                  <class name="circular"/>
+                </style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparator">
+                <property name="orientation">vertical</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkExpander" id="expander">
+                <property name="halign">center</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+            <style>
+              <class name="header"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkRevealer" id="revealer">
+            <property name="can-focus">0</property>
+            <property name="reveal-child" bind-source="expander" bind-property="expanded" bind-flags="bidirectional|sync-create"/>
+            <property name="child">
+              <object class="GtkBox">
+                <property name="can-focus">0</property>
+                <property name="orientation">vertical</property>
+                <property name="spacing">12</property>
+                <child>
+                  <object class="GtkLabel" id="description">
+                    <property name="can-focus">0</property>
+                    <property name="margin-start">12</property>
+                    <property name="margin-end">12</property>
+                    <property name="margin-top">12</property>
+                    <property name="margin-bottom">12</property>
+                    <property name="label">A longer description of what this plugin does.</property>
+                    <property name="wrap">1</property>
+                    <property name="xalign">0</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkListBox">
+                    <property name="can-focus">0</property>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">0</property>
+                        <property name="selectable">0</property>
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="can-focus">0</property>
+                            <property name="margin-start">12</property>
+                            <property name="margin-end">12</property>
+                            <property name="margin-top">12</property>
+                            <property name="margin-bottom">12</property>
+                            <property name="spacing">12</property>
+                            <child>
+                              <object class="GtkLabel" id="authors_label">
+                                <property name="can-focus">0</property>
+                                <property name="label" translatable="yes">Authors</property>
+                                <property name="xalign">0</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkBox" id="authors_box">
+                                <property name="orientation">vertical</property>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="can-focus">0</property>
+                                    <property name="label">An Author &lt;author@example.com&gt;</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">0</property>
+                        <property name="selectable">0</property>
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="can-focus">0</property>
+                            <property name="margin-start">12</property>
+                            <property name="margin-end">12</property>
+                            <property name="margin-top">12</property>
+                            <property name="margin-bottom">12</property>
+                            <property name="spacing">12</property>
+                            <child>
+                              <object class="GtkLabel" id="website_label">
+                                <property name="can-focus">0</property>
+                                <property name="label" translatable="yes">Website</property>
+                                <property name="xalign">0</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="website">
+                                <property name="can-focus">0</property>
+                                <property name="label">&lt;a href=&quot;https://pidgin.im&quot;&gt;https://pidgin.im&lt;/a&gt;</property>
+                                <property name="use-markup">1</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">0</property>
+                        <property name="selectable">0</property>
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="can-focus">0</property>
+                            <property name="margin-start">12</property>
+                            <property name="margin-end">12</property>
+                            <property name="margin-top">12</property>
+                            <property name="margin-bottom">12</property>
+                            <property name="spacing">12</property>
+                            <child>
+                              <object class="GtkLabel" id="dependencies_label">
+                                <property name="can-focus">0</property>
+                                <property name="label" translatable="yes">Dependencies</property>
+                                <property name="xalign">0</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkBox" id="dependencies_box">
+                                <property name="orientation">vertical</property>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="can-focus">0</property>
+                                    <property name="label">(none)</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">0</property>
+                        <property name="selectable">0</property>
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="can-focus">0</property>
+                            <property name="margin-start">12</property>
+                            <property name="margin-end">12</property>
+                            <property name="margin-top">12</property>
+                            <property name="margin-bottom">12</property>
+                            <property name="spacing">12</property>
+                            <child>
+                              <object class="GtkLabel" id="error_label">
+                                <property name="can-focus">0</property>
+                                <property name="label" translatable="yes">Error</property>
+                                <property name="xalign">0</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="error">
+                                <property name="can-focus">0</property>
+                                <property name="label">(none)</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">0</property>
+                        <property name="selectable">0</property>
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="can-focus">0</property>
+                            <property name="margin-start">12</property>
+                            <property name="margin-end">12</property>
+                            <property name="margin-top">12</property>
+                            <property name="margin-bottom">12</property>
+                            <property name="spacing">12</property>
+                            <child>
+                              <object class="GtkLabel" id="id_label">
+                                <property name="can-focus">0</property>
+                                <property name="label" translatable="yes">ID</property>
+                                <property name="xalign">0</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="id">
+                                <property name="can-focus">0</property>
+                                <property name="label">gplugin/example-plugin</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">0</property>
+                        <property name="selectable">0</property>
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="can-focus">0</property>
+                            <property name="margin-start">12</property>
+                            <property name="margin-end">12</property>
+                            <property name="margin-top">12</property>
+                            <property name="margin-bottom">12</property>
+                            <property name="spacing">12</property>
+                            <child>
+                              <object class="GtkLabel" id="filename_label">
+                                <property name="can-focus">0</property>
+                                <property name="label" translatable="yes">Filename</property>
+                                <property name="xalign">0</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="filename">
+                                <property name="can-focus">0</property>
+                                <property name="label">/the/full/path/to/plugin.so</property>
+                                <property name="ellipsize">start</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">0</property>
+                        <property name="selectable">0</property>
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="can-focus">0</property>
+                            <property name="margin-start">12</property>
+                            <property name="margin-end">12</property>
+                            <property name="margin-top">12</property>
+                            <property name="margin-bottom">12</property>
+                            <property name="spacing">12</property>
+                            <child>
+                              <object class="GtkLabel" id="abi_version_label">
+                                <property name="can-focus">0</property>
+                                <property name="label" translatable="yes">ABI Version</property>
+                                <property name="xalign">0</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="abi_version">
+                                <property name="can-focus">0</property>
+                                <property name="label">DEADC0DE</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">0</property>
+                        <property name="selectable">0</property>
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="can-focus">0</property>
+                            <property name="margin-start">12</property>
+                            <property name="margin-end">12</property>
+                            <property name="margin-top">12</property>
+                            <property name="margin-bottom">12</property>
+                            <property name="spacing">12</property>
+                            <child>
+                              <object class="GtkLabel" id="loader_label">
+                                <property name="can-focus">0</property>
+                                <property name="label" translatable="yes">Loader</property>
+                                <property name="xalign">0</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="loader">
+                                <property name="can-focus">0</property>
+                                <property name="label">GPluginExampleLoader</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">0</property>
+                        <property name="selectable">0</property>
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="can-focus">0</property>
+                            <property name="margin-start">12</property>
+                            <property name="margin-end">12</property>
+                            <property name="margin-top">12</property>
+                            <property name="margin-bottom">12</property>
+                            <property name="spacing">12</property>
+                            <child>
+                              <object class="GtkLabel" id="internal_label">
+                                <property name="can-focus">0</property>
+                                <property name="label" translatable="yes">Internal</property>
+                                <property name="xalign">0</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="internal">
+                                <property name="can-focus">0</property>
+                                <property name="label">Maybe</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="activatable">0</property>
+                        <property name="selectable">0</property>
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="can-focus">0</property>
+                            <property name="margin-start">12</property>
+                            <property name="margin-end">12</property>
+                            <property name="margin-top">12</property>
+                            <property name="margin-bottom">12</property>
+                            <property name="spacing">12</property>
+                            <child>
+                              <object class="GtkLabel" id="load_on_query_label">
+                                <property name="can-focus">0</property>
+                                <property name="label" translatable="yes">Load on Query</property>
+                                <property name="xalign">0</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="load_on_query">
+                                <property name="can-focus">0</property>
+                                <property name="label">Maybe</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <style>
+                      <class name="nested"/>
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </property>
+          </object>
+        </child>
+      </object>
+    </property>
+    <style>
+      <class name="content"/>
+      <class name="expander"/>
+    </style>
+  </template>
+  <object class="GtkSizeGroup">
+    <property name="mode">horizontal</property>
+    <widgets>
+      <widget name="authors_label"/>
+      <widget name="website_label"/>
+      <widget name="dependencies_label"/>
+      <widget name="error_label"/>
+      <widget name="id_label"/>
+      <widget name="filename_label"/>
+      <widget name="abi_version_label"/>
+      <widget name="loader_label"/>
+      <widget name="internal_label"/>
+      <widget name="load_on_query_label"/>
+    </widgets>
+  </object>
+</interface>

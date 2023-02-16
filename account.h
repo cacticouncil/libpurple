@@ -411,6 +411,26 @@ void purple_account_set_status_attrs(PurpleAccount *account,
 	const char *status_id, gboolean active, GHashTable *attrs);
 
 /**
+ * purple_account_get_silence_suppression:
+ * @account: The account.
+ *
+ * Return whether silence suppression is used during voice call.
+ *
+ * Returns: %TRUE if suppression is used, or %FALSE if not.
+ */
+gboolean purple_account_get_silence_suppression(PurpleAccount *account);
+
+/**
+ * purple_account_set_silence_suppression:
+ * @account: The account.
+ * @value:   %TRUE if suppression should be used.
+ *
+ * Sets whether silence suppression is used during voice call.
+ */
+void purple_account_set_silence_suppression(PurpleAccount *account,
+											gboolean value);
+
+/**
  * purple_account_clear_settings:
  * @account: The account.
  *
@@ -989,31 +1009,6 @@ const PurpleConnectionErrorInfo *purple_account_get_current_error(PurpleAccount 
  * Clear an account's current error state, resetting it to %NULL.
  */
 void purple_account_clear_current_error(PurpleAccount *account);
-
-/**
- * purple_account_set_require_password:
- * @account: The instance.
- * @require_password: Whether or not this account should require a password.
- *
- * For protocols that have an optional password, this settings tells libpurple
- * that it should look for a password in the [class@Purple.CredentialManager]
- * or prompt the user if a password can not be found.
- *
- * Since: 3.0.0
- */
-void purple_account_set_require_password(PurpleAccount *account, gboolean require_password);
-
-/**
- * purple_account_get_require_password:
- * @account: The instance.
- *
- * Gets whether or not @account requires a password.
- *
- * Returns: %TRUE if the account requires a password, %FALSE otherwise.
- *
- * Since: 3.0.0
- */
-gboolean purple_account_get_require_password(PurpleAccount *account);
 
 G_END_DECLS
 

@@ -165,23 +165,6 @@ purple_protocol_foreach_account_disconnect(PurpleAccount *account,
 }
 
 /******************************************************************************
- * PurpleProtocol Implementation
- *****************************************************************************/
-static PurpleConnection *
-purple_protocol_default_create_connection(PurpleProtocol *protocol,
-                                          PurpleAccount *account,
-                                          const char *password,
-                                          G_GNUC_UNUSED GError **error)
-{
-	return g_object_new(
-		PURPLE_TYPE_CONNECTION,
-		"protocol", protocol,
-		"account", account,
-		"password", password,
-		NULL);
-}
-
-/******************************************************************************
  * GObject Implementation
  *****************************************************************************/
 static void
@@ -302,8 +285,6 @@ purple_protocol_class_init(PurpleProtocolClass *klass) {
 	obj_class->get_property = purple_protocol_get_property;
 	obj_class->set_property = purple_protocol_set_property;
 	obj_class->finalize = purple_protocol_finalize;
-
-	klass->create_connection = purple_protocol_default_create_connection;
 
 	/**
 	 * PurpleProtocol::id:
@@ -550,7 +531,7 @@ purple_protocol_login(PurpleProtocol *protocol, PurpleAccount *account) {
 
 	klass = PURPLE_PROTOCOL_GET_CLASS(protocol);
 	if(klass != NULL && klass->login != NULL) {
-		klass->login(protocol, account);
+		klass->login(account);
 	}
 }
 
@@ -563,32 +544,8 @@ purple_protocol_close(PurpleProtocol *protocol, PurpleConnection *gc) {
 
 	klass = PURPLE_PROTOCOL_GET_CLASS(protocol);
 	if(klass != NULL && klass->close != NULL) {
-		klass->close(protocol, gc);
+		klass->close(gc);
 	}
-}
-
-
-PurpleConnection *
-purple_protocol_create_connection(PurpleProtocol *protocol,
-                                  PurpleAccount *account,
-                                  const char *password,
-                                  GError **error)
-{
-	PurpleProtocolClass *klass = NULL;
-
-	g_return_val_if_fail(PURPLE_IS_PROTOCOL(protocol), NULL);
-	g_return_val_if_fail(PURPLE_IS_ACCOUNT(account), NULL);
-
-	klass = PURPLE_PROTOCOL_GET_CLASS(protocol);
-	if(klass != NULL && klass->create_connection != NULL) {
-		return klass->create_connection(protocol, account, password, error);
-	}
-
-	g_set_error(error, PURPLE_CONNECTION_ERROR, 0,
-	            "Protocol %s did not implement create_connection",
-	            purple_protocol_get_name(protocol));
-
-	return NULL;
 }
 
 GList *
@@ -602,7 +559,7 @@ purple_protocol_get_status_types(PurpleProtocol *protocol,
 
 	klass = PURPLE_PROTOCOL_GET_CLASS(protocol);
 	if(klass != NULL && klass->status_types != NULL) {
-		return klass->status_types(protocol, account);
+		return klass->status_types(account);
 	}
 
 	return NULL;

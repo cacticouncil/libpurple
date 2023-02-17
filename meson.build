@@ -548,9 +548,9 @@ purple_coresources = [
 	'purpleconversation.c',
 	'purpleconversationmanager.c',
 	'purpleconversationuiops.c',
+	'purplecoreuiops.c',
 	'purplecredentialmanager.c',
 	'purplecredentialprovider.c',
-	'purplecoreuiops.c',
 	'purpledebugui.c',
 	'purplegdkpixbuf.c',
 	'purplegio.c',
@@ -583,7 +583,6 @@ purple_coresources = [
 	'purpleprotocolwhiteboard.c',
 	'purpleproxyinfo.c',
 	'purpleroomlistroom.c',
-	'purplesqlite3.c',
 	'purplesqlitehistoryadapter.c',
 	'purpletags.c',
 	'purpleuiinfo.c',
@@ -599,11 +598,11 @@ purple_coresources = [
 	'signals.c',
 	'status.c',
 	'stun.c',
+	'upnp.c',
 	'util.c',
 	'version.c',
 	'xfer.c',
-	'xmlnode.c',
-	'upnp.c',
+	'xmlnode.c'
 ]
 
 purple_coreheaders = [
@@ -654,9 +653,9 @@ purple_coreheaders = [
 	'purpleconversation.h',
 	'purpleconversationmanager.h',
 	'purpleconversationuiops.h',
+	'purplecoreuiops.h',
 	'purplecredentialmanager.h',
 	'purplecredentialprovider.h',
-	'purplecoreuiops.h',
 	'purpledebugui.h',
 	'purplegdkpixbuf.h',
 	'purplegio.h',
@@ -690,7 +689,6 @@ purple_coreheaders = [
 	'purpleprotocolwhiteboard.h',
 	'purpleproxyinfo.h',
 	'purpleroomlistroom.h',
-	'purplesqlite3.h',
 	'purplesqlitehistoryadapter.h',
 	'purpletags.h',
 	'purpleuiinfo.h',
@@ -708,10 +706,10 @@ purple_coreheaders = [
 	'status.h',
 	'stun.h',
 	'tests.h',
+	'upnp.h',
 	'util.h',
 	'xfer.h',
 	'xmlnode.h',
-	'upnp.h',
 ]
 
 purple_generated_sources = []
@@ -878,4 +876,5 @@ subdir('data')
 subdir('tests')
 subdir('plugins')
 subdir('protocols')
+subdir('purple-history')
 #subdir('pidgin')

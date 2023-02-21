@@ -11,5 +11,5 @@ cd libpurple
 meson build
 cd build
 ln -s .. libpurple
-meson compile
+ninja
 ```

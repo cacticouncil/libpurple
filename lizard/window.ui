@@ -53,6 +53,22 @@
                 <property name ="label">Channels</property>
               </object>
             </child>
+            <!-- TODO: Change this later to be generated-->
+            <child>
+              <object class="GtkExpander" id="channel_expander">
+                <property name ="margin-top">30</property>
+                <property name ="halign">start</property>
+                <property name ="valign">start</property>
+                <property name ="label">Folder</property>
+                <child>
+                  <object class="GtkLinkButton" id="channel_link_1">
+                    <property name ="halign">start</property>
+                    <property name ="valign">start</property>
+                    <property name ="label">#channel-1</property>
+                  </object>
+                </child>
+              </object>
+            </child>
           </object>
         </child>
         <child>
@@ -80,7 +96,7 @@
                    </object>
                   </child>
                   <child>
-                      <object class="GtkBox" id="content_box1">
+                      <object class="GtkBox" id="content_box_1">
                         <property name="orientation">horizontal</property>
                         <child>
                           <object class="GtkEntry" id="chat_entry">
@@ -89,6 +105,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="show-emoji-icon">true</property>
+                            <property name="enable-emoji-completion">true</property>
                             <property name="placeholder_text" translatable="yes">Message to send...</property>
                           </object>
                         </child>

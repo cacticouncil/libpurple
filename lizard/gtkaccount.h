@@ -1,5 +1,4 @@
-/*
- * pidgin
+/* pidgin
  *
  * Pidgin is the legal property of its developers, whose names are too numerous
  * to list here.  Please refer to the COPYRIGHT file distributed with this
@@ -18,29 +17,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
- *
  */
-#include <glib/gi18n.h>
-#include "lizardcore.h"
-#ifdef _WIN32
-/* suppress gcc "no previous prototype" warning */
-int __cdecl pidgin_main(HINSTANCE hint, int argc, char *argv[]);
-int __cdecl pidgin_main(HINSTANCE hint, int argc, char *argv[])
-#else
-int main(int argc, char *argv[])
+#if !defined(PIDGIN_GLOBAL_HEADER_INSIDE) && !defined(PIDGIN_COMPILATION)
+//# error "only <pidgin.h> may be included directly"
 #endif
-{
-	const gchar *test_prgname;
-#ifdef _WIN32
-	SetConsoleOutputCP(65001); /* UTF-8 */
-#endif
-	/* This is for UI testing purposes only, don't use it! */
-	test_prgname = g_getenv("PIDGIN_TEST_PRGNAME");
-	if (test_prgname != NULL)
-		g_set_prgname(test_prgname);
-	g_set_application_name(PIDGIN_NAME);
-#ifdef _WIN32
-	winpidgin_set_exe_hinstance(hint);
-#endif
-	return pidgin_start(argc, argv);
-}
+#ifndef _PIDGINACCOUNT_H_
+#define _PIDGINACCOUNT_H_
+#include <purple.h>
+G_BEGIN_DECLS
+/**
+ * pidgin_accounts_init:
+ *
+ * Initializes the GTK account system
+ */
+void pidgin_accounts_init(void);
+/**
+ * pidgin_accounts_uninit:
+ *
+ * Uninitializes the GTK account system
+ */
+void pidgin_accounts_uninit(void);
+G_END_DECLS
+#endif /* _PIDGINACCOUNT_H_ */

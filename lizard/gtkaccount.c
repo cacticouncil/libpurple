@@ -1,5 +1,4 @@
-/*
- * pidgin
+/* pidgin
  *
  * Pidgin is the legal property of its developers, whose names are too numerous
  * to list here.  Please refer to the COPYRIGHT file distributed with this
@@ -18,29 +17,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111-1301  USA
- *
  */
-#include <glib/gi18n.h>
+#include <purple.h>
+#include "gtkaccount.h"
 #include "lizardcore.h"
-#ifdef _WIN32
-/* suppress gcc "no previous prototype" warning */
-int __cdecl pidgin_main(HINSTANCE hint, int argc, char *argv[]);
-int __cdecl pidgin_main(HINSTANCE hint, int argc, char *argv[])
-#else
-int main(int argc, char *argv[])
-#endif
+void
+pidgin_accounts_init(void)
 {
-	const gchar *test_prgname;
-#ifdef _WIN32
-	SetConsoleOutputCP(65001); /* UTF-8 */
-#endif
-	/* This is for UI testing purposes only, don't use it! */
-	test_prgname = g_getenv("PIDGIN_TEST_PRGNAME");
-	if (test_prgname != NULL)
-		g_set_prgname(test_prgname);
-	g_set_application_name(PIDGIN_NAME);
-#ifdef _WIN32
-	winpidgin_set_exe_hinstance(hint);
-#endif
-	return pidgin_start(argc, argv);
+	purple_prefs_add_none(PIDGIN_PREFS_ROOT "/accounts");
+	purple_prefs_add_none(PIDGIN_PREFS_ROOT "/accounts/dialog");
+	purple_prefs_add_int(PIDGIN_PREFS_ROOT "/accounts/dialog/width",  520);
+	purple_prefs_add_int(PIDGIN_PREFS_ROOT "/accounts/dialog/height", 321);
+	purple_prefs_add_path(PIDGIN_PREFS_ROOT "/accounts/buddyicon", NULL);
+}
+void
+pidgin_accounts_uninit(void)
+{
 }

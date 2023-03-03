@@ -28,8 +28,8 @@
 #include <glib/gstdio.h>
 #include <locale.h>
 #include <purple.h>
-#include "pidginapplication.h"
-#include "pidgincore.h"
+#include "lizardapplication.h"
+#include "lizardcore.h"
 #ifndef _WIN32
 #include <signal.h>
 #endif

@@ -7,6 +7,6 @@ executable('hello_2',
   dependencies: [libpurple_dep, glib, gplugin_dep, gplugin_gtk_dep])
 
 executable('lizard',
-  'lizard.c','liblizard.c', 'lizardapplication.c',
+  'lizard.c','liblizard.c', 'lizardapplication.c','lizardaccountmanager.c','gtkaccount.c',
   dependencies: [libpurple_dep, glib, gplugin_dep, gplugin_gtk_dep, gdk_pixbuf, gstreamer, gio, libadwaita])
   

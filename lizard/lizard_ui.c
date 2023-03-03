@@ -148,7 +148,7 @@ void ui_lizard_init()
 {
     PurpleUi *ui = NULL;
 	GError *error = NULL;
-
+	
     /* libpurple's built-in DNS resolution forks processes to perform
 	 * blocking lookups without blocking the main process.  It does not
 	 * handle SIGCHLD itself, so if the UI does not you quickly get an army
@@ -161,6 +161,8 @@ void ui_lizard_init()
 
     ui = lizard_ui_new();
 
+	g_print("Hello World!");
+
     if (!purple_core_init(ui, &error)) {
 		/* Initializing the core failed. Terminate. */
 		fprintf(stderr,
@@ -170,6 +172,8 @@ void ui_lizard_init()
 		g_clear_error(&error);
 		abort();
 	}
+	
+	
 
 	if(!ui_init_history(&error)) {
 		g_critical("failed to initialize the history api: %s",
@@ -177,6 +181,7 @@ void ui_lizard_init()
 		g_clear_error(&error);
 	}
 
+	
     // CHANGE THIS FOR THE PLUGINS FOR FACEBOOK, SLACK AND MICROSOFT TEAMS
 	/* Load the preferences. */
 	purple_prefs_load();

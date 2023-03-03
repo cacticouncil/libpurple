@@ -8,10 +8,11 @@
 
 #include <stdio.h>
 
-#define CUSTOM_USER_DIRECTORY  "~/"
+#define CUSTOM_USER_DIRECTORY  "~/libpurple/"
 
 static void init_libpurple()
 {
+	//g_print("Hello World!");
     /* Set a custom user directory (optional) */
 	purple_util_set_user_dir(CUSTOM_USER_DIRECTORY);
 
@@ -23,15 +24,14 @@ static void init_libpurple()
 	
 	/*Initalizing subsystms*/
     purple_connections_init();
-
+	
     purple_conversations_init();
 
 }
 int main(int argc, char *argv[])
 {
-
-	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
-
+	//GMainLoop *loop = g_main_loop_new(NULL, FALSE);
+	//g_print("Hello World!");
 	init_libpurple();
 
 	printf("libpurple initialized. Running version %s.\n", purple_core_get_version()); //I like to see the version number
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 
     purple_account_connect(account);
 
-	g_main_loop_run(loop);
+	//g_main_loop_run(loop);
 
 	return 0;
 
